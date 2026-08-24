@@ -47,6 +47,12 @@ const legend = [...new Set(graph.nodes.map((n) => n.category))];
     padding: 1rem 1.5rem;
   }
 
+  /* 本页去掉页脚的上边距：让图谱底边贴近页脚，
+     与图谱顶边到导航栏的距离（1rem）大致对称 */
+  :global(.site-footer) {
+    margin-top: 0;
+  }
+
   .graph-overlay {
     position: absolute;
     bottom: 2rem;
