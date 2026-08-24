@@ -1,0 +1,247 @@
+---
+// 全文搜索弹窗：基于 Pagefind（构建后生成 /pagefind/ 静态索引）
+// 交互：点击头部「搜索」按钮或 Ctrl+K / Cmd+K 打开，Esc 关闭
+// 开发模式下 /pagefind/pagefind.js 不存在，弹窗内会给出提示
+---
+
+<div
+  class="search-overlay"
+  id="search-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-label="搜索"
+  hidden
+>
+  <div class="search-modal">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m20 20-3.8-3.8"></path>
+      </svg>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="搜索标题、正文、标签…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <kbd>Esc</kbd>
+    </div>
+    <div class="search-hint">Ctrl+K 打开 · 输入即搜 · 结果带关键词高亮</div>
+    <div class="search-status" id="search-status"></div>
+    <ul class="search-results" id="search-results"></ul>
+  </div>
+</div>
+
+<script>
+  const overlay = document.getElementById('search-overlay') as HTMLElement;
+  const input = document.getElementById('search-input') as HTMLInputElement;
+  const statusEl = document.getElementById('search-status') as HTMLElement;
+  const resultsEl = document.getElementById('search-results') as HTMLElement;
+
+  let pagefind: any = null;
+  let loadFailed = false;
+
+  function open() {
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(() => input.focus(), 50);
+  }
+
+  function close() {
+    overlay.hidden = true;
+    document.body.style.overflow = '';
+    input.value = '';
+    resultsEl.innerHTML = '';
+    statusEl.textContent = '';
+  }
+
+  // 头部搜索按钮（所有页面都有）
+  document.querySelectorAll<HTMLElement>('.search-button').forEach((btn) => {
+    btn.addEventListener('click', open);
+  });
+
+  // Ctrl+K / Cmd+K 切换，Esc 关闭
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      overlay.hidden ? open() : close();
+    }
+    if (e.key === 'Escape' && !overlay.hidden) close();
+  });
+
+  // 点击遮罩关闭
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
+
+  // 懒加载 Pagefind（构建后才存在，dev 下 import 会失败）
+  async function loadPagefind(): Promise<boolean> {
+    if (pagefind) return true;
+    if (loadFailed) return false;
+    try {
+      // 构建后由 Pagefind 生成的静态资源：@vite-ignore 让构建器跳过解析，@ts-ignore 让类型检查跳过
+      const mod = await import(/* @vite-ignore */ '/pagefind/pagefind.js');
+      pagefind = mod;
+      await pagefind.options({ showSubResults: false });
+      return true;
+    } catch {
+      loadFailed = true;
+      return false;
+    }
+  }
+
+  let timer: number | undefined;
+  input.addEventListener('input', () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(doSearch, 200);
+  });
+
+  async function doSearch() {
+    const query = input.value.trim();
+    if (!query) {
+      resultsEl.innerHTML = '';
+      statusEl.textContent = '';
+      return;
+    }
+    if (!(await loadPagefind())) {
+      statusEl.textContent = '本地开发模式暂无索引：运行 npm run build 后即可搜索。';
+      return;
+    }
+    statusEl.textContent = '搜索中…';
+    const search = await pagefind.search(query);
+    const top = search.results.slice(0, 10);
+    const items = await Promise.all(top.map((r: any) => r.data()));
+    statusEl.textContent = items.length > 0 ? `找到 ${search.results.length} 个结果` : '没有找到相关结果';
+    resultsEl.innerHTML = items
+      .map(
+        (item: any) => `
+      <li>
+        <a href="${item.url}">
+          <span class="result-title">${item.meta.title}</span>
+          <span class="result-excerpt">${item.excerpt}</span>
+        </a>
+      </li>`
+      )
+      .join('');
+  }
+</script>
+
+<style>
+  .search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 15vh 1rem 2rem;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(3px);
+  }
+
+  .search-overlay[hidden] {
+    display: none;
+  }
+
+  .search-modal {
+    width: min(640px, 100%);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-height: 65vh;
+    overflow-y: auto;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+  }
+
+  .search-box svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+  }
+
+  .search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 1rem;
+  }
+
+  .search-box kbd {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+  }
+
+  .search-hint {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+  }
+
+  .search-status {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    min-height: 1.2em;
+  }
+
+  .search-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .search-results :global(a) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: var(--radius);
+    color: var(--color-text);
+  }
+
+  .search-results :global(a:hover) {
+    background: var(--color-subtle);
+    text-decoration: none;
+  }
+
+  .search-results :global(.result-title) {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .search-results :global(.result-excerpt) {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.55;
+  }
+
+  .search-results :global(mark) {
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+    border-radius: 2px;
+    padding: 0 0.1em;
+  }
+</style>

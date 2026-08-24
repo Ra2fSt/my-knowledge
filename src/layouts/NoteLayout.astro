@@ -24,7 +24,7 @@ const updated = noteUpdatedAt(note);
 
 <BaseLayout title={title} description={description}>
   <div class="note-layout container">
-    <article class="note-article">
+    <article class="note-article" data-pagefind-body>
       <header class="note-header">
         <h1>{title}</h1>
         {description && <p class="note-desc">{description}</p>}
@@ -52,7 +52,7 @@ const updated = noteUpdatedAt(note);
 
       {
         related.length > 0 && (
-          <section class="link-section">
+          <section class="link-section" data-pagefind-ignore>
             <h2 class="section-title">相关笔记</h2>
             <ul class="related-list">
               {related.map((n) => (
@@ -68,7 +68,7 @@ const updated = noteUpdatedAt(note);
 
       {
         backlinks.length > 0 && (
-          <section class="link-section">
+          <section class="link-section" data-pagefind-ignore>
             <h2 class="section-title">反向链接</h2>
             <p class="section-hint">{backlinks.length} 篇笔记链接到这里</p>
             <ul class="backlink-list">
@@ -84,7 +84,7 @@ const updated = noteUpdatedAt(note);
 
       {
         outbound.length > 0 && (
-          <section class="link-section">
+          <section class="link-section" data-pagefind-ignore>
             <h2 class="section-title">本笔记链接到</h2>
             <div class="outbound-chips">
               {outbound.map((n) => (
@@ -95,7 +95,7 @@ const updated = noteUpdatedAt(note);
         )
       }
 
-      <nav class="note-pager" aria-label="笔记导航">
+      <nav class="note-pager" aria-label="笔记导航" data-pagefind-ignore>
         {
           prev ? (
             <a class="pager-item prev" href={`/notes/${prev.id}/`}>
@@ -125,7 +125,7 @@ const updated = noteUpdatedAt(note);
       </nav>
     </article>
 
-    <aside class="note-sidebar">
+    <aside class="note-sidebar" data-pagefind-ignore>
       <Toc headings={headings} />
     </aside>
   </div>
