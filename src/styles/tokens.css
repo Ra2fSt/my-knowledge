@@ -29,10 +29,6 @@
   /* 代码块 */
   --color-code-bg: #ede5d3;
 
-  /* 搜索结果高亮（荧光笔） */
-  --color-mark-bg: #ffdf5c;
-  --color-mark-text: #4a3b00;
-
   /* 笔记状态色 */
   --color-learning: #b45309;
   --color-organizing: #1d4ed8;
@@ -73,10 +69,6 @@
 
     --color-code-bg: #1a1f33;
 
-    /* 搜索结果高亮（荧光笔） */
-    --color-mark-bg: #e5b93c;
-    --color-mark-text: #2a2000;
-
     --color-learning: #e8a94e;
     --color-organizing: #8db2ff;
     --color-mastered: #5ccf97;
@@ -103,10 +95,6 @@
     --color-accent-soft: rgba(92, 191, 146, 0.14);
 
     --color-code-bg: #1a1f33;
-
-    /* 搜索结果高亮（荧光笔） */
-    --color-mark-bg: #e5b93c;
-    --color-mark-text: #2a2000;
 
     --color-learning: #e8a94e;
     --color-organizing: #8db2ff;
