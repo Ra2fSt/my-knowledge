@@ -3,9 +3,11 @@ import type { MarkdownHeading } from 'astro';
 import BaseLayout from './BaseLayout.astro';
 import Toc from '../components/Toc.astro';
 import StatusBadge from '../components/StatusBadge.astro';
+import KnowledgeGraph from '../components/KnowledgeGraph.astro';
 import { formatDate } from '../lib/utils';
 import { noteUpdatedAt, UNCATEGORIZED } from '../lib/notes';
 import type { NoteEntry } from '../lib/notes';
+import type { GraphData } from '../lib/graph';
 
 interface Props {
   note: NoteEntry;
@@ -15,9 +17,10 @@ interface Props {
   outbound: NoteEntry[];
   backlinks: NoteEntry[];
   related: NoteEntry[];
+  localGraph: GraphData;
 }
 
-const { note, headings, prev, next, outbound, backlinks, related } = Astro.props;
+const { note, headings, prev, next, outbound, backlinks, related, localGraph } = Astro.props;
 const { title, description, category, tags, status, pubDate } = note.data;
 const updated = noteUpdatedAt(note);
 ---
@@ -91,6 +94,21 @@ const updated = noteUpdatedAt(note);
                 <a class="chip" href={`/notes/${n.id}/`}>{n.data.title}</a>
               ))}
             </div>
+          </section>
+        )
+      }
+
+      {
+        localGraph.nodes.length > 1 && (
+          <section class="link-section" data-pagefind-ignore>
+            <h2 class="section-title">局部图谱</h2>
+            <p class="section-hint">本笔记与直接相连的笔记（点击节点跳转，可拖动）</p>
+            <KnowledgeGraph
+              nodes={localGraph.nodes}
+              links={localGraph.links}
+              height={320}
+              client:visible
+            />
           </section>
         )
       }

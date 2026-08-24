@@ -1,0 +1,174 @@
+---
+// 知识图谱画布（force-graph，Canvas 2D 渲染）
+// 仅客户端渲染：client:visible 懒加载，滚到可见才下载绘制代码
+// 数据传递：把节点/连线序列化进 <script type="application/json">，
+// 客户端脚本读取后绘制（Astro 7 不会自动序列化 Astro.props 到客户端脚本）。
+// 主题适配：画布文字/连线颜色在初始化时读 CSS 变量，主题切换时自动刷新
+import type { GraphNode, GraphLink } from '../lib/graph';
+
+interface Props {
+  nodes: GraphNode[];
+  links: GraphLink[];
+  height?: number;
+}
+
+const { nodes, links, height = 480 } = Astro.props;
+// 转义 < 防止提前闭合标签；textContent 里 JSON 反序列化时 < 会还原
+const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
+---
+
+<div class="graph-wrap" id="knowledge-graph" data-height={height} data-pagefind-ignore>
+  <script type="application/json" id="knowledge-graph-data" set:html={data}></script>
+</div>
+
+<script>
+  import { ForceGraph } from '../lib/force-graph';
+  import type { GraphNode, GraphLink } from '../lib/graph';
+
+  // force-graph 运行时会给节点加上坐标，这里补上 x/y 便于画布绘制
+  type RenderNode = GraphNode & { x: number; y: number };
+
+  const el = document.getElementById('knowledge-graph') as HTMLElement;
+  const dataEl = document.getElementById('knowledge-graph-data') as HTMLScriptElement;
+  const height = Number(el.dataset.height || 480);
+  const { nodes, links } = JSON.parse(dataEl.textContent || '{}') as {
+    nodes: GraphNode[];
+    links: GraphLink[];
+  };
+
+  if (nodes.length === 0) {
+    el.innerHTML = '<p class="graph-empty">还没有笔记，先去「笔记」页写下第一篇吧。</p>';
+  } else {
+    initGraph();
+  }
+
+  function initGraph() {
+    // 主题相关颜色：初始化时从 CSS 变量读取，主题切换时刷新
+    const cssVar = (name: string) =>
+      getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const withAlpha = (hex: string, alpha: number) => {
+      const m = /^#([0-9a-f]{6})$/i.exec(hex);
+      if (!m) return hex;
+      const n = parseInt(m[1], 16);
+      return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+    };
+
+    let textColor = cssVar('--color-text');
+    let mutedColor = cssVar('--color-text-muted');
+
+    const highlightNodes = new Set<GraphNode>();
+    const highlightLinks = new Set<GraphLink>();
+
+    // 圆点 + 下方标题；悬停中的节点画一圈描边
+    const drawNode = (node: RenderNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
+      const fontSize = 12 / globalScale;
+      const r = Math.max(3.5, Math.sqrt(node.val) * 1.7);
+      ctx.font = `500 ${fontSize}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
+      ctx.fillStyle = node.color;
+      ctx.fill();
+      if (highlightNodes.has(node)) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r + 2 / globalScale, 0, 2 * Math.PI, false);
+        ctx.lineWidth = 2 / globalScale;
+        ctx.strokeStyle = textColor;
+        ctx.stroke();
+      }
+      ctx.fillStyle = textColor;
+      ctx.fillText(node.name, node.x, node.y + r + fontSize * 0.9);
+    };
+
+    const fg = ForceGraph()(el)
+      .width(el.clientWidth || 800)
+      .height(height)
+      .backgroundColor('rgba(0,0,0,0)')
+      .graphData({ nodes, links })
+      .nodeId('id')
+      .nodeLabel('name')
+      .nodeVal('val')
+      .linkColor((l: unknown) =>
+        highlightLinks.size === 0 || highlightLinks.has(l as GraphLink)
+          ? withAlpha(mutedColor, 0.45)
+          : withAlpha(mutedColor, 0.08)
+      )
+      .nodeCanvasObject(drawNode)
+      .onNodeClick((node) => {
+        window.location.href = (node as GraphNode).url;
+      })
+      .onNodeHover((node) => {
+        highlightNodes.clear();
+        highlightLinks.clear();
+        if (node) {
+          highlightNodes.add(node as GraphNode);
+          (fg.graphData() as { links: GraphLink[] }).links.forEach((l) => {
+            const s = l.source as unknown as RenderNode;
+            const t = l.target as unknown as RenderNode;
+            if (s === node) {
+              highlightNodes.add(t);
+              highlightLinks.add(l);
+            }
+            if (t === node) {
+              highlightNodes.add(s);
+              highlightLinks.add(l);
+            }
+          });
+        }
+        // 重新赋一遍 accessor 触发重绘（force-graph 官方推荐写法）
+        fg.linkColor(fg.linkColor());
+        fg.nodeCanvasObject(fg.nodeCanvasObject());
+        el.style.cursor = node ? 'pointer' : '';
+      })
+      .onNodeDragEnd((node) => {
+        // 拖完后钉住位置，方便手工整理
+        const n = node as RenderNode & { fx?: number; fy?: number };
+        n.fx = n.x;
+        n.fy = n.y;
+      });
+
+    // 力参数：电荷排斥强度与连线目标长度
+    (fg.d3Force('charge') as { strength: (s: number) => unknown }).strength(-260);
+    (fg.d3Force('link') as { distance: (d: number) => unknown }).distance(70);
+
+    // 预跑若干帧让初始布局稳定
+    fg.warmupTicks(80);
+
+    // 主题切换（手动按钮或系统偏好）时刷新画布颜色
+    const refreshTheme = () => {
+      textColor = cssVar('--color-text');
+      mutedColor = cssVar('--color-text-muted');
+      fg.linkColor(fg.linkColor());
+      fg.nodeCanvasObject(fg.nodeCanvasObject());
+    };
+    new MutationObserver(refreshTheme).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    window
+      .matchMedia('(prefers-color-scheme: dark)')
+      .addEventListener('change', refreshTheme);
+
+    // 窗口尺寸变化时自适应宽度
+    window.addEventListener('resize', () => fg.width(el.clientWidth || 800));
+  }
+</script>
+
+<style>
+  .graph-wrap {
+    position: relative;
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    overflow: hidden;
+  }
+
+  .graph-wrap :global(.graph-empty) {
+    margin: 0;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--color-text-muted);
+  }
+</style>

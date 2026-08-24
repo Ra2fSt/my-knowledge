@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import KnowledgeGraph from '../../components/KnowledgeGraph.astro';
+import { getNotes } from '../../lib/notes';
+import { buildGlobalGraph, categoryColor } from '../../lib/graph';
+
+const notes = await getNotes();
+const graph = buildGlobalGraph(notes);
+// 图例：入选节点出现过的分类
+const legend = [...new Set(graph.nodes.map((n) => n.category))];
+---
+
+<BaseLayout title="知识图谱" description="以节点与连线呈现笔记之间的双链关系">
+  <div class="graph-page">
+    <header class="graph-header">
+      <h1>知识图谱</h1>
+      <p class="graph-desc">
+        每个节点是一篇笔记，颜色代表分类，连线代表双链引用。点击节点打开笔记，拖动节点可整理布局，滚轮缩放。
+      </p>
+      {
+        legend.length > 0 && (
+          <div class="graph-legend">
+            {legend.map((category) => (
+              <span class="legend-item">
+                <span class="legend-dot" style={`background:${categoryColor(category)}`}></span>
+                {category}
+              </span>
+            ))}
+          </div>
+        )
+      }
+    </header>
+
+    <KnowledgeGraph nodes={graph.nodes} links={graph.links} height={480} client:visible />
+  </div>
+</BaseLayout>
+
+<style>
+  .graph-page {
+    width: min(var(--content-width), 100%);
+    margin-inline: auto;
+    padding: 2.5rem 1.5rem 3rem;
+  }
+
+  .graph-header h1 {
+    margin: 0 0 0.5rem;
+  }
+
+  .graph-desc {
+    margin: 0 0 1rem;
+    color: var(--color-text-secondary);
+    max-width: 60ch;
+  }
+
+  .graph-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    color: var(--color-text-secondary);
+  }
+
+  .legend-dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+  }
+</style>

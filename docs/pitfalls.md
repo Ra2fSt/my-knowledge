@@ -98,3 +98,22 @@
   const mod = await Function('p', 'return import(p)')('/pagefind/pagefind.js');
   ```
 - **验证经验**:只靠 curl 查文件/响应头是不够的。本项目最后用 Chrome 无头模式(`chrome.exe --headless=new --dump-dom`,配合测试页把结果写进 `<title>`)在真实浏览器里跑通"加载→初始化→搜索→取结果"全流程,才确认修复。以后凡是"浏览器行为"类 bug,优先用无头浏览器复现。
+- **抓控制台报错**:`chrome.exe --headless=new --enable-logging=stderr --v=0 --dump-dom <url> 2>&1 | grep -i CONSOLE` 可以把页面的 JS 报错打到终端。
+
+## 11. 给客户端组件传数据的正确姿势（阶段 4 踩坑）
+
+知识图谱组件需要在客户端脚本里拿到构建时算好的节点/连线数据,两个坑:
+
+- **Astro 7 不会把 `Astro.props` 序列化进客户端脚本**。在 `<script>` 里写 `Astro.props.nodes` 能通过类型检查,但产物里只留下裸的 `Astro.props` 引用,页面里没有任何定义,运行时报 `Astro is not defined`。
+- **`<script>` 标签体不是模板,不做插值**。写 `<script type="application/json">{data}</script>` 会把字面的 `{data}` 原样输出到页面,JSON.parse 报 SyntaxError。
+
+**方案**:用 `set:html` 把序列化数据注入 `<script type="application/json">`,客户端脚本自己 `JSON.parse`:
+
+```astro
+---
+const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
+---
+<script type="application/json" id="knowledge-graph-data" set:html={data}></script>
+```
+
+- **另外**:force-graph 自带的 `.d.ts` 与实际用法不符(默认导出不可调用、回调参数类型缺失)。写 `declare module` 的 d.ts 会被包自带的类型覆盖而失效;正确做法是建一个本地包装模块(`src/lib/force-graph.ts`)把默认导出断言成自己的宽松接口,组件从本地模块导入。

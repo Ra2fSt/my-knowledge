@@ -3,6 +3,7 @@ import { render } from 'astro:content';
 import NoteLayout from '../../layouts/NoteLayout.astro';
 import { getNotes } from '../../lib/notes';
 import { buildTitleIndex, getBacklinks, getOutboundNotes, getRelatedNotes } from '../../lib/wikilinks';
+import { buildLocalGraph } from '../../lib/graph';
 
 export async function getStaticPaths() {
   const notes = await getNotes();
@@ -27,6 +28,7 @@ const titleIndex = buildTitleIndex(allNotes);
 const outbound = getOutboundNotes(note, titleIndex);
 const backlinks = getBacklinks(note, allNotes, titleIndex);
 const related = getRelatedNotes(note, allNotes, titleIndex);
+const localGraph = buildLocalGraph(note, allNotes);
 ---
 
 <NoteLayout
@@ -37,6 +39,7 @@ const related = getRelatedNotes(note, allNotes, titleIndex);
   outbound={outbound}
   backlinks={backlinks}
   related={related}
+  localGraph={localGraph}
 >
   <Content />
 </NoteLayout>
