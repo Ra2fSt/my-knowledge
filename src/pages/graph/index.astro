@@ -12,64 +12,99 @@ const legend = [...new Set(graph.nodes.map((n) => n.category))];
 
 <BaseLayout title="知识图谱" description="以节点与连线呈现笔记之间的双链关系">
   <div class="graph-page">
-    <header class="graph-header">
+    <KnowledgeGraph nodes={graph.nodes} links={graph.links} client:visible />
+
+    <div class="graph-overlay graph-desc">
       <h1>知识图谱</h1>
-      <p class="graph-desc">
+      <p>
         每个节点是一篇笔记，颜色代表分类，连线代表双链引用。点击节点打开笔记，拖动节点可整理布局，滚轮缩放。
       </p>
-      {
-        legend.length > 0 && (
-          <div class="graph-legend">
-            {legend.map((category) => (
-              <span class="legend-item">
-                <span class="legend-dot" style={`background:${categoryColor(category)}`}></span>
-                {category}
-              </span>
-            ))}
-          </div>
-        )
-      }
-    </header>
+    </div>
 
-    <KnowledgeGraph nodes={graph.nodes} links={graph.links} height={480} client:visible />
+    {
+      legend.length > 0 && (
+        <div class="graph-overlay graph-legend">
+          {legend.map((category) => (
+            <span class="legend-item">
+              <span class="legend-dot" style={`background:${categoryColor(category)}`}></span>
+              {category}
+            </span>
+          ))}
+        </div>
+      )
+    }
   </div>
 </BaseLayout>
 
 <style>
+  /* 满屏布局：页头与页脚之间的空间全部给图谱，说明与图例悬浮在画布上 */
   .graph-page {
-    width: min(var(--content-width), 100%);
-    margin-inline: auto;
-    padding: 2.5rem 1.5rem 3rem;
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1.5rem;
   }
 
-  .graph-header h1 {
-    margin: 0 0 0.5rem;
+  .graph-overlay {
+    position: absolute;
+    bottom: 2rem;
+    z-index: 1;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.7rem 1rem;
+    font-size: 0.88rem;
+    color: var(--color-text-secondary);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   }
 
   .graph-desc {
-    margin: 0 0 1rem;
-    color: var(--color-text-secondary);
-    max-width: 60ch;
+    left: 2rem;
+    max-width: 300px;
+  }
+
+  .graph-desc h1 {
+    font-size: 1.1rem;
+    margin: 0 0 0.3rem;
+    color: var(--color-text);
+  }
+
+  .graph-desc p {
+    margin: 0;
+    line-height: 1.6;
   }
 
   .graph-legend {
+    right: 2rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1.2rem;
-    margin-bottom: 1.2rem;
+    gap: 0.35rem 1rem;
   }
 
   .legend-item {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.88rem;
-    color: var(--color-text-secondary);
+    white-space: nowrap;
   }
 
   .legend-dot {
     width: 0.7rem;
     height: 0.7rem;
     border-radius: 50%;
+  }
+
+  @media (max-width: 768px) {
+    .graph-desc {
+      max-width: 55%;
+      left: 1.25rem;
+    }
+
+    .graph-legend {
+      max-width: 45%;
+      right: 1.25rem;
+    }
   }
 </style>

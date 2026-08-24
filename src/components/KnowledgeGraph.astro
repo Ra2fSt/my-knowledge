@@ -9,15 +9,20 @@ import type { GraphNode, GraphLink } from '../lib/graph';
 interface Props {
   nodes: GraphNode[];
   links: GraphLink[];
-  height?: number;
+  height?: number; // 不传时填满父容器（fill 模式，用于全局图谱页）
 }
 
-const { nodes, links, height = 480 } = Astro.props;
+const { nodes, links, height } = Astro.props;
 // 转义 < 防止提前闭合标签；textContent 里 JSON 反序列化时 < 会还原
 const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
 ---
 
-<div class="graph-wrap" id="knowledge-graph" data-height={height} data-pagefind-ignore>
+<div
+  class:list={['graph-wrap', { fill: !height }]}
+  id="knowledge-graph"
+  data-height={height}
+  data-pagefind-ignore
+>
   <script type="application/json" id="knowledge-graph-data" set:html={data}></script>
 </div>
 
@@ -30,7 +35,9 @@ const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
 
   const el = document.getElementById('knowledge-graph') as HTMLElement;
   const dataEl = document.getElementById('knowledge-graph-data') as HTMLScriptElement;
-  const height = Number(el.dataset.height || 480);
+  // fill 模式（无固定高度）下取容器实际高度
+  const fill = !el.dataset.height;
+  const height = fill ? el.clientHeight || 480 : Number(el.dataset.height);
   const { nodes, links } = JSON.parse(dataEl.textContent || '{}') as {
     nodes: GraphNode[];
     links: GraphLink[];
@@ -150,8 +157,11 @@ const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
       .matchMedia('(prefers-color-scheme: dark)')
       .addEventListener('change', refreshTheme);
 
-    // 窗口尺寸变化时自适应宽度
-    window.addEventListener('resize', () => fg.width(el.clientWidth || 800));
+    // 窗口尺寸变化时自适应宽高（fill 模式高度跟随容器）
+    window.addEventListener('resize', () => {
+      fg.width(el.clientWidth || 800);
+      if (fill) fg.height(el.clientHeight || 480);
+    });
   }
 </script>
 
@@ -163,6 +173,12 @@ const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
     border-radius: var(--radius);
     background: var(--color-bg);
     overflow: hidden;
+  }
+
+  /* fill 模式：占满父容器（全局图谱页的满屏布局） */
+  .graph-wrap.fill {
+    flex: 1;
+    min-height: 0;
   }
 
   .graph-wrap :global(.graph-empty) {

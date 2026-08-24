@@ -15,7 +15,8 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
 
 function isActive(href: string): boolean {
   if (href === '/') return path === '/';
-  return path.startsWith(href);
+  // path 已去掉末尾斜杠，href 也要去掉再比较，否则 /notes 对不上 /notes/
+  return path.startsWith(href.replace(/\/+$/, ''));
 }
 ---
 
