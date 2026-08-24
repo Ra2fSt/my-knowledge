@@ -2,6 +2,7 @@
 import { render } from 'astro:content';
 import NoteLayout from '../../layouts/NoteLayout.astro';
 import { getNotes } from '../../lib/notes';
+import { buildTitleIndex, getBacklinks, getOutboundNotes, getRelatedNotes } from '../../lib/wikilinks';
 
 export async function getStaticPaths() {
   const notes = await getNotes();
@@ -19,8 +20,23 @@ export async function getStaticPaths() {
 
 const { note, prev, next } = Astro.props;
 const { Content, headings } = await render(note);
+
+// 双链数据：出链 / 反向链接 / 相关笔记
+const allNotes = await getNotes();
+const titleIndex = buildTitleIndex(allNotes);
+const outbound = getOutboundNotes(note, titleIndex);
+const backlinks = getBacklinks(note, allNotes, titleIndex);
+const related = getRelatedNotes(note, allNotes, titleIndex);
 ---
 
-<NoteLayout note={note} headings={headings} prev={prev} next={next}>
+<NoteLayout
+  note={note}
+  headings={headings}
+  prev={prev}
+  next={next}
+  outbound={outbound}
+  backlinks={backlinks}
+  related={related}
+>
   <Content />
 </NoteLayout>

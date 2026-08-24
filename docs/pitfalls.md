@@ -23,8 +23,29 @@
 | `entry.render()` | `import { render } from 'astro:content'` 然后 `render(entry)` |
 | 集合加载用 `glob`(content.config 里) | `import { glob } from 'astro/loaders'` |
 | `getStaticPaths` 参数标注 `{ paginate: any }` | 用 `GetStaticPathsOptions`;分页 props 用 `Page<T>` 手动断言 |
+| `markdown.remarkPlugins: [插件]` | 已弃用。先 `npm install @astrojs/markdown-remark`,再 `processor: unified({ remarkPlugins: [插件] })`(见第 10 条) |
 
 - **经验**:查 API 最可靠的方式是直接看 `node_modules/astro/dist` 里的 `.d.ts` 和源码,官方文档可能滞后于最新版本。
+
+### 2a. Astro 7 默认 Markdown 处理器换成了 Sätteri
+
+- **现象**:配置 `markdown.remarkPlugins` 直接报错,提示 `@astrojs/markdown-remark` 未安装。
+- **原因**:Astro 7 起默认用 Sätteri(Native 处理器),它不走 unified/remark 插件生态;旧的 remark/rehype 插件必须挂在官方兼容包 `@astrojs/markdown-remark` 的 `unified()` 处理器上。
+- **方案**:
+  ```js
+  import { unified } from '@astrojs/markdown-remark';
+  // astro.config.mjs
+  markdown: {
+    processor: unified({ remarkPlugins: [wikilinkPlugin] }),
+  },
+  ```
+  GFM、smartypants 默认值不变,渲染行为与旧版一致。
+
+### 2b. 自定义 Markdown 插件会在「内容同步」阶段执行,不能调用 astro:content
+
+- **现象**:双链插件里 `await import('astro:content')` + `getCollection()` 导致所有 Markdown 解析失败:`[glob-loader] Error rendering xxx.md: Failed to parse Markdown file`;症状诡异——构建能"成功"结束但**所有笔记正文变空**,且错误结果被缓存进 `node_modules/.astro/data-store.json`(删 `.astro/` 清不掉,必须连 `node_modules/.astro` 一起删)。
+- **原因**:内容层同步时逐文件解析 Markdown(remark 插件此时就跑),插件内再调用 `astro:content` 会重入尚未就绪的内容层。
+- **方案**:插件需要的元数据(如标题→slug 索引)**直接读磁盘上的 .md 文件**构建(同步阶段所有文件都已存在,索引完整)。本项目 `src/lib/wikilink-plugin.ts` 即用 `node:fs` 读 `src/content/notes/*.md` 提取 frontmatter title。
 
 ## 3. `paginate()` 要求路由文件名带 `[page]`
 

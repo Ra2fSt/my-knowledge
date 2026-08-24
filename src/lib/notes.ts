@@ -1,9 +1,10 @@
 import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
+import { UNCATEGORIZED } from '../consts';
 
 export type NoteEntry = CollectionEntry<'notes'>;
 
-export const UNCATEGORIZED = '未分类';
+export { UNCATEGORIZED };
 
 // 全部笔记，按 updatedDate 降序（缺省时用 pubDate），同日按 pubDate 降序
 export async function getNotes(): Promise<NoteEntry[]> {

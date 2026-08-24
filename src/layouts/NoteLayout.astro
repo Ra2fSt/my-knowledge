@@ -12,9 +12,12 @@ interface Props {
   headings: MarkdownHeading[];
   prev: { id: string; title: string } | null;
   next: { id: string; title: string } | null;
+  outbound: NoteEntry[];
+  backlinks: NoteEntry[];
+  related: NoteEntry[];
 }
 
-const { note, headings, prev, next } = Astro.props;
+const { note, headings, prev, next, outbound, backlinks, related } = Astro.props;
 const { title, description, category, tags, status, pubDate } = note.data;
 const updated = noteUpdatedAt(note);
 ---
@@ -46,6 +49,51 @@ const updated = noteUpdatedAt(note);
       <div class="note-content">
         <slot />
       </div>
+
+      {
+        related.length > 0 && (
+          <section class="link-section">
+            <h2 class="section-title">相关笔记</h2>
+            <ul class="related-list">
+              {related.map((n) => (
+                <li>
+                  <a href={`/notes/${n.id}/`}>{n.data.title}</a>
+                  {n.data.description && <span class="related-desc">{n.data.description}</span>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+
+      {
+        backlinks.length > 0 && (
+          <section class="link-section">
+            <h2 class="section-title">反向链接</h2>
+            <p class="section-hint">{backlinks.length} 篇笔记链接到这里</p>
+            <ul class="backlink-list">
+              {backlinks.map((n) => (
+                <li>
+                  <a href={`/notes/${n.id}/`}>{n.data.title}</a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+
+      {
+        outbound.length > 0 && (
+          <section class="link-section">
+            <h2 class="section-title">本笔记链接到</h2>
+            <div class="outbound-chips">
+              {outbound.map((n) => (
+                <a class="chip" href={`/notes/${n.id}/`}>{n.data.title}</a>
+              ))}
+            </div>
+          </section>
+        )
+      }
 
       <nav class="note-pager" aria-label="笔记导航">
         {
@@ -141,6 +189,80 @@ const updated = noteUpdatedAt(note);
 
   .note-content :global(h3) {
     margin-top: 1.6em;
+  }
+
+  /* 双链样式（slot 内容不受作用域影响，需 :global） */
+  .note-content :global(a.wikilink) {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+  }
+
+  .note-content :global(.wikilink-missing) {
+    color: var(--color-text-muted);
+    border-bottom: 1px dashed var(--color-text-muted);
+    cursor: help;
+  }
+
+  .link-section {
+    margin-top: 2.8rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .section-title {
+    font-size: 1.05rem;
+    margin: 0 0 0.4rem;
+  }
+
+  .section-hint {
+    margin: 0 0 0.9rem;
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+  }
+
+  .related-list,
+  .backlink-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .related-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .related-desc {
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  .outbound-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .chip {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+  }
+
+  .chip:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    text-decoration: none;
   }
 
   .note-sidebar {
