@@ -88,3 +88,13 @@
 
 - 笔记文件用 ASCII slug(如 `astro-static-site.md`),中文标题写在 frontmatter 的 `title` 里。URL 保持纯 ASCII,避免各平台对非 ASCII 文件名的兼容差异。
 - 分类/标签是自由字符串(可为中文),由 Astro 构建时生成对应目录,跨平台部署已验证正常(见第 4 条)。
+
+## 10. 构建器会改写动态 import,运行时加载外部文件要用 Function 包一层
+
+- **现象**:构建产物里 `import('/pagefind/pagefind.js')` 被编译成 `import(url, __VITE_PRELOAD__)`,而这个 `__VITE_PRELOAD__` 在整个产物里**只被引用、从未定义**,浏览器执行时抛 `ReferenceError`,搜索永远提示"暂无索引"。服务器端怎么查都正常(文件 200、MIME 正确),因为坏的是产物里的 JS 本身。
+- **原因**:即使写了 `/* @vite-ignore */`,构建器(rolldown)仍会把动态 import 改写为预加载辅助函数形式,而 Pagefind 这类"构建后才生成、不在模块图里"的运行时文件没有对应的辅助函数定义。
+- **方案**:用 `Function` 构造器把 import 藏起来,构建器看不到就不会改写:
+  ```js
+  const mod = await Function('p', 'return import(p)')('/pagefind/pagefind.js');
+  ```
+- **验证经验**:只靠 curl 查文件/响应头是不够的。本项目最后用 Chrome 无头模式(`chrome.exe --headless=new --dump-dom`,配合测试页把结果写进 `<title>`)在真实浏览器里跑通"加载→初始化→搜索→取结果"全流程,才确认修复。以后凡是"浏览器行为"类 bug,优先用无头浏览器复现。

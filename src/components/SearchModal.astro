@@ -80,13 +80,25 @@
     if (pagefind) return true;
     if (loadFailed) return false;
     try {
-      // 构建后由 Pagefind 生成的静态资源：@vite-ignore 让构建器跳过解析，@ts-ignore 让类型检查跳过
-      const mod = await import(/* @vite-ignore */ '/pagefind/pagefind.js');
+      // Pagefind 是构建后生成的静态资源，运行时才存在。
+      // 用 new Function 包住 import：构建器看不到它就不会改写（普通写法会被
+      // 编译成 import(url, __VITE_PRELOAD__)，而该辅助函数在产物里并不存在，导致运行时报错）。
+      const mod = await new Function('p', 'return import(p)')('/pagefind/pagefind.js');
       pagefind = mod;
       await pagefind.options({ showSubResults: false });
       return true;
-    } catch {
+    } catch (err) {
       loadFailed = true;
+      // 区分「开发模式没有索引」（文件不存在）和「真实加载失败」，后者要显示具体原因
+      const detail = err instanceof Error ? err.message : String(err);
+      try {
+        const probe = await fetch('/pagefind/pagefind.js', { method: 'HEAD' });
+        statusEl.textContent = probe.ok
+          ? `搜索初始化失败：${detail}`
+          : '本地开发模式暂无索引：运行 npm run build 后即可搜索。';
+      } catch {
+        statusEl.textContent = '本地开发模式暂无索引：运行 npm run build 后即可搜索。';
+      }
       return false;
     }
   }
@@ -104,10 +116,8 @@
       statusEl.textContent = '';
       return;
     }
-    if (!(await loadPagefind())) {
-      statusEl.textContent = '本地开发模式暂无索引：运行 npm run build 后即可搜索。';
-      return;
-    }
+    // 失败原因已由 loadPagefind 写入 statusEl，这里不覆盖
+    if (!(await loadPagefind())) return;
     statusEl.textContent = '搜索中…';
     const search = await pagefind.search(query);
     const top = search.results.slice(0, 10);
