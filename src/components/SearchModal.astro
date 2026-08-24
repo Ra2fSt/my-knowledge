@@ -109,6 +109,29 @@
     timer = window.setTimeout(doSearch, 200);
   });
 
+  // 转义后把查询词包上 <mark>。单遍正则替换 + 长词优先，
+  // 避免"短词先包、长词再匹配进 mark 标签里"的嵌套问题。
+  function escapeHtml(s: string): string {
+    return String(s).replace(/[&<>"']/g, (ch) => {
+      return (
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[ch]
+      );
+    });
+  }
+
+  function highlight(text: string, query: string): string {
+    const terms = [...new Set(query.split(/\s+/).filter((t) => t.length > 0))].sort(
+      (a, b) => b.length - a.length
+    );
+    let html = escapeHtml(text);
+    if (terms.length === 0) return html;
+    const pattern = new RegExp(
+      terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'),
+      'gi'
+    );
+    return html.replace(pattern, (m) => `<mark>${m}</mark>`);
+  }
+
   async function doSearch() {
     const query = input.value.trim();
     if (!query) {
@@ -128,7 +151,7 @@
         (item: any) => `
       <li>
         <a href="${item.url}">
-          <span class="result-title">${item.meta.title}</span>
+          <span class="result-title">${highlight(item.meta.title, query)}</span>
           <span class="result-excerpt">${item.excerpt}</span>
         </a>
       </li>`
@@ -249,9 +272,10 @@
   }
 
   .search-results :global(mark) {
-    background: var(--color-accent-soft);
-    color: var(--color-accent);
-    border-radius: 2px;
-    padding: 0 0.1em;
+    background: var(--color-mark-bg);
+    color: var(--color-mark-text);
+    font-weight: 600;
+    border-radius: 3px;
+    padding: 0.05em 0.15em;
   }
 </style>
