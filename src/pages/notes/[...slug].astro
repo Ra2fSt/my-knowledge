@@ -1,0 +1,26 @@
+---
+import { render } from 'astro:content';
+import NoteLayout from '../../layouts/NoteLayout.astro';
+import { getNotes } from '../../lib/notes';
+
+export async function getStaticPaths() {
+  const notes = await getNotes();
+  return notes.map((note, index) => {
+    // 上一篇/下一篇：按 updatedDate 降序的相邻笔记
+    const prev = index > 0
+      ? { id: notes[index - 1].id, title: notes[index - 1].data.title }
+      : null;
+    const next = index < notes.length - 1
+      ? { id: notes[index + 1].id, title: notes[index + 1].data.title }
+      : null;
+    return { params: { slug: note.id }, props: { note, prev, next } };
+  });
+}
+
+const { note, prev, next } = Astro.props;
+const { Content, headings } = await render(note);
+---
+
+<NoteLayout note={note} headings={headings} prev={prev} next={next}>
+  <Content />
+</NoteLayout>

@@ -1,0 +1,168 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import { SITE_TITLE } from '../consts';
+
+const navItems = [
+  { href: '/', label: '首页' },
+  { href: '/notes/', label: '笔记' },
+  { href: '/categories/', label: '分类' },
+  { href: '/tags/', label: '标签' },
+  { href: '/graph/', label: '图谱' },
+  { href: '/about/', label: '关于' },
+];
+
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+
+function isActive(href: string): boolean {
+  if (href === '/') return path === '/';
+  return path.startsWith(href);
+}
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="site-title" href="/">{SITE_TITLE}</a>
+
+    <nav class="site-nav" aria-label="主导航">
+      {
+        navItems.map((item) => (
+          <a href={item.href} class:list={['nav-link', { active: isActive(item.href) }]}>
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-button search-button" type="button" aria-label="搜索">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.8-3.8"></path>
+        </svg>
+        <span>搜索</span>
+      </button>
+      <ThemeToggle />
+    </div>
+
+    <details class="mobile-menu">
+      <summary class="icon-button" aria-label="打开菜单">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </summary>
+      <div class="mobile-menu-panel">
+        {navItems.map((item) => <a href={item.href}>{item.label}</a>)}
+      </div>
+    </details>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    height: 3.5rem;
+  }
+
+  .site-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+
+  .site-title:hover {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .site-nav {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .nav-link {
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius);
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+  }
+
+  .nav-link:hover {
+    color: var(--color-text);
+    background: var(--color-subtle);
+    text-decoration: none;
+  }
+
+  .nav-link.active {
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  .header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .mobile-menu {
+    display: none;
+    position: relative;
+  }
+
+  .mobile-menu summary {
+    list-style: none;
+  }
+
+  .mobile-menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-menu-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    min-width: 10rem;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-menu-panel a {
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius);
+    color: var(--color-text);
+    font-size: 0.95rem;
+  }
+
+  .mobile-menu-panel a:hover {
+    background: var(--color-subtle);
+    text-decoration: none;
+  }
+
+  @media (max-width: 768px) {
+    .site-nav,
+    .search-button {
+      display: none;
+    }
+
+    .mobile-menu {
+      display: block;
+    }
+  }
+</style>

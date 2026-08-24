@@ -1,0 +1,103 @@
+/* ============================================
+   设计变量（Design Tokens）
+   亮色：米色纸张感；暗色：深紫藏青的夜空感。
+   系统主题跟随通过 @media 实现，
+   用户手动选择通过 html[data-theme] 覆盖。
+   ============================================ */
+
+:root {
+  color-scheme: light;
+
+  /* 背景与表面 */
+  --color-bg: #f5efe2;
+  --color-surface: #fdfbf5;
+  --color-subtle: #ede5d3;
+
+  /* 文字 */
+  --color-text: #2b2721;
+  --color-text-secondary: #5f5a4e;
+  --color-text-muted: #8f8878;
+
+  /* 边框 */
+  --color-border: #e2d9c3;
+
+  /* 主色（链接、强调） */
+  --color-accent: #2e7d5b;
+  --color-accent-hover: #236447;
+  --color-accent-soft: rgba(46, 125, 91, 0.1);
+
+  /* 代码块 */
+  --color-code-bg: #ede5d3;
+
+  /* 笔记状态色 */
+  --color-learning: #b45309;
+  --color-organizing: #1d4ed8;
+  --color-mastered: #15803d;
+  --color-archived: #6b7280;
+
+  /* 布局与圆角 */
+  --radius: 8px;
+  --radius-lg: 12px;
+  --content-width: 1100px;
+  --article-width: 72ch;
+
+  /* 字体 */
+  --font-sans: -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas,
+    'SF Mono', monospace;
+}
+
+/* 跟随系统：暗色（用户未手动选择时生效） */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --color-bg: #0b0e18;
+    --color-surface: #121728;
+    --color-subtle: #1a1f33;
+
+    --color-text: #e9edf5;
+    --color-text-secondary: #a4adc2;
+    --color-text-muted: #79839b;
+
+    --color-border: #242b45;
+
+    --color-accent: #5cbf92;
+    --color-accent-hover: #70d1a6;
+    --color-accent-soft: rgba(92, 191, 146, 0.14);
+
+    --color-code-bg: #1a1f33;
+
+    --color-learning: #e8a94e;
+    --color-organizing: #8db2ff;
+    --color-mastered: #5ccf97;
+    --color-archived: #96a1b6;
+  }
+}
+
+/* 用户手动选择：暗色（优先级高于系统偏好） */
+:root[data-theme='dark'] {
+    color-scheme: dark;
+
+    --color-bg: #0b0e18;
+    --color-surface: #121728;
+    --color-subtle: #1a1f33;
+
+    --color-text: #e9edf5;
+    --color-text-secondary: #a4adc2;
+    --color-text-muted: #79839b;
+
+    --color-border: #242b45;
+
+    --color-accent: #5cbf92;
+    --color-accent-hover: #70d1a6;
+    --color-accent-soft: rgba(92, 191, 146, 0.14);
+
+    --color-code-bg: #1a1f33;
+
+    --color-learning: #e8a94e;
+    --color-organizing: #8db2ff;
+    --color-mastered: #5ccf97;
+    --color-archived: #96a1b6;
+}

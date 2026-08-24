@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NoteCard from '../../components/NoteCard.astro';
+import { getNotes, notesByTag } from '../../lib/notes';
+
+export async function getStaticPaths() {
+  const notes = await getNotes();
+  const tagSet = new Set(notes.flatMap((n) => n.data.tags));
+  return [...tagSet].map((tag) => ({ params: { tag } }));
+}
+
+const tag = Astro.params.tag ?? '';
+const notes = await getNotes();
+const withTag = notesByTag(notes, tag);
+---
+
+<BaseLayout title={`标签：${tag}`}>
+  <div class="container list-page">
+    <header class="list-header">
+      <h1>标签：#{tag}</h1>
+      <p>{withTag.length} 篇笔记 · <a href="/tags/">← 全部标签</a></p>
+    </header>
+
+    <div class="note-list">
+      {withTag.map((note) => <NoteCard note={note} />)}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .list-page {
+    max-width: var(--article-width);
+    margin-inline: auto;
+    padding-top: 2.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .list-header h1 {
+    margin: 0 0 0.4rem;
+  }
+
+  .list-header p {
+    margin: 0 0 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+</style>

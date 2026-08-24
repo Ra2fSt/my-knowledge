@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NoteCard from '../../components/NoteCard.astro';
+import { getNotes, notesByCategory, UNCATEGORIZED } from '../../lib/notes';
+
+export async function getStaticPaths() {
+  const notes = await getNotes();
+  const categorySet = new Set(notes.map((n) => n.data.category ?? UNCATEGORIZED));
+  return [...categorySet].map((category) => ({ params: { category } }));
+}
+
+const category = Astro.params.category ?? '';
+const notes = await getNotes();
+const inCategory = notesByCategory(notes, category);
+---
+
+<BaseLayout title={`分类：${category}`}>
+  <div class="container list-page">
+    <header class="list-header">
+      <h1>分类：{category}</h1>
+      <p>{inCategory.length} 篇笔记 · <a href="/categories/">← 全部分类</a></p>
+    </header>
+
+    <div class="note-list">
+      {inCategory.map((note) => <NoteCard note={note} />)}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .list-page {
+    max-width: var(--article-width);
+    margin-inline: auto;
+    padding-top: 2.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .list-header h1 {
+    margin: 0 0 0.4rem;
+  }
+
+  .list-header p {
+    margin: 0 0 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+</style>

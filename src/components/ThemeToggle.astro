@@ -1,0 +1,51 @@
+<button class="icon-button theme-toggle" type="button" aria-label="切换明暗主题">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="4"></circle>
+    <path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+  </svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+  </svg>
+</button>
+
+<style>
+  /* 默认（亮色）显示月亮图标，脚本初始化时会按实际主题修正 */
+  .icon-sun {
+    display: none;
+  }
+</style>
+
+<script>
+  // 判断当前实际主题：显式选择优先，否则跟随系统
+  function isDark() {
+    const saved = document.documentElement.dataset.theme;
+    if (saved === 'dark') return true;
+    if (saved === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function updateIcon() {
+    const dark = isDark();
+    const button = document.querySelector('.theme-toggle');
+    if (!button) return;
+    const sun = button.querySelector<HTMLElement>('.icon-sun');
+    const moon = button.querySelector<HTMLElement>('.icon-moon');
+    if (sun) sun.style.display = dark ? 'block' : 'none';
+    if (moon) moon.style.display = dark ? 'none' : 'block';
+  }
+
+  const button = document.querySelector('.theme-toggle');
+
+  button?.addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch {
+      // localStorage 不可用（如隐私模式）时静默降级：仅本次会话生效
+    }
+    updateIcon();
+  });
+
+  updateIcon();
+</script>

@@ -1,0 +1,74 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getNotes, getTagCounts } from '../../lib/notes';
+
+const notes = await getNotes();
+const tags = [...getTagCounts(notes).entries()];
+// 字号按标签数量分级：0.8rem ~ 1.4rem
+const maxCount = tags.length > 0 ? tags[0][1] : 1;
+---
+
+<BaseLayout title="标签">
+  <div class="container list-page">
+    <header class="list-header">
+      <h1>标签</h1>
+      <p>共 {tags.length} 个标签</p>
+    </header>
+
+    <ul class="tag-cloud">
+      {tags.map(([tag, count]) => {
+        const size = 0.8 + (count / maxCount) * 0.6;
+        return (
+          <li style={`font-size:${size.toFixed(2)}rem`}>
+            <a href={`/tags/${encodeURIComponent(tag)}/`}>
+              #{tag} <span class="count">{count}</span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .list-page {
+    max-width: var(--article-width);
+    margin-inline: auto;
+    padding-top: 2.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .list-header h1 {
+    margin: 0 0 0.4rem;
+  }
+
+  .list-header p {
+    margin: 0 0 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .tag-cloud {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem 1rem;
+  }
+
+  .tag-cloud a {
+    color: var(--color-text-secondary);
+  }
+
+  .tag-cloud a:hover {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .count {
+    font-size: 0.7em;
+    color: var(--color-text-muted);
+  }
+</style>

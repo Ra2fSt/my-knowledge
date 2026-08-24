@@ -1,0 +1,46 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<BaseLayout title="关于">
+  <div class="container about-page">
+    <h1>关于本站</h1>
+    <p>{SITE_TITLE} 是一个用 Markdown 培育的个人知识库（数字花园）。</p>
+
+    <h2>理念</h2>
+    <p>
+      笔记是活着的：它们会随理解加深不断更新、互相连接。每篇笔记都有学习状态，
+      从「学习中」到「已掌握」，像植物一样生长。详细理念见
+      <a href="/notes/digital-garden/">数字花园理念</a>。
+    </p>
+
+    <h2>技术</h2>
+    <ul>
+      <li>
+        纯静态架构：<a href="/notes/astro-static-site/">Astro</a>
+        在构建时把 Markdown 变成静态页面，无后端、无数据库。
+      </li>
+      <li>
+        内容即文件：所有笔记都是 <code>src/content/notes/</code> 下的 Markdown
+        文件，由 Git 管理版本。
+      </li>
+      <li>
+        笔记之间用 <a href="/notes/wikilinks/">双链</a> 连接，形成可视化的知识网络。
+      </li>
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .about-page {
+    max-width: var(--article-width);
+    margin-inline: auto;
+    padding-top: 2.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .about-page h2 {
+    margin-top: 2em;
+  }
+</style>
