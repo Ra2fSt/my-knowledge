@@ -44,13 +44,13 @@ const legend = [...new Set(graph.nodes.map((n) => n.category))];
     min-height: 0;
     display: flex;
     flex-direction: column;
-    padding: 1rem 1.5rem;
+    padding: 1rem 1.5rem 0;
   }
 
-  /* 本页去掉页脚的上边距：让图谱底边贴近页脚，
+  /* 本页收紧页脚上边距（覆盖 Footer 的变量），让图谱底边贴近页脚，
      与图谱顶边到导航栏的距离（1rem）大致对称 */
   :global(.site-footer) {
-    margin-top: 0;
+    --footer-margin-top: 0;
   }
 
   .graph-overlay {

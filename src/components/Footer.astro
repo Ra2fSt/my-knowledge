@@ -15,8 +15,9 @@ import { SITE_TITLE } from '../consts';
 <style>
   .site-footer {
     border-top: 1px solid var(--color-border);
+    /* 个别页面（如图谱页）通过覆盖 --footer-margin-top 变量收紧页脚间距 */
+    margin-top: var(--footer-margin-top, 3rem);
     padding: 1.5rem 0;
-    margin-top: 3rem;
   }
 
   .footer-inner {
