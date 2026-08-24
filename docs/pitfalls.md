@@ -6,7 +6,12 @@
 
 - **现象**:`create-astro` 脚手架从 GitHub 下载模板时报 `SELF_SIGNED_CERT_IN_CHAIN`(本地网络有 HTTPS 中间证书拦截)。
 - **影响范围**:npm registry 完全正常,只有直接访问 GitHub 域名受影响。未来 `git push` / `git pull` GitHub 仓库时可能遇到同样的证书报错。
-- **对策**:脚手架手动搭建(本项目即如此);如 push 报证书错,优先检查代理设置或与网络环境协商,不要盲目关闭 `sslVerify`。
+- **对策**:脚手架手动搭建(本项目即如此)。已验证的解决方案:本机有本地代理(127.0.0.1:10808)时,给 git 配代理即可正常访问 GitHub:
+  ```bash
+  git config --global http.proxy http://127.0.0.1:10808
+  git config --global https.proxy http://127.0.0.1:10808
+  ```
+  不要盲目关闭 `sslVerify`。
 
 ## 2. Astro 7 的 API 与旧教程不同
 
