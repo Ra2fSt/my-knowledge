@@ -17,13 +17,13 @@
 
 网上大量教程基于 Astro 2–4 的写法,在 7.x 上会报错或弃用:
 
-| 旧写法 | Astro 7 正确写法 |
-|---|---|
-| `import { z } from 'astro:content'` | `import { z } from 'astro/zod'` |
-| `entry.render()` | `import { render } from 'astro:content'` 然后 `render(entry)` |
-| 集合加载用 `glob`(content.config 里) | `import { glob } from 'astro/loaders'` |
-| `getStaticPaths` 参数标注 `{ paginate: any }` | 用 `GetStaticPathsOptions`;分页 props 用 `Page<T>` 手动断言 |
-| `markdown.remarkPlugins: [插件]` | 已弃用。先 `npm install @astrojs/markdown-remark`,再 `processor: unified({ remarkPlugins: [插件] })`(见第 10 条) |
+| 旧写法                                        | Astro 7 正确写法                                                                                                 |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `import { z } from 'astro:content'`           | `import { z } from 'astro/zod'`                                                                                  |
+| `entry.render()`                              | `import { render } from 'astro:content'` 然后 `render(entry)`                                                    |
+| 集合加载用 `glob`(content.config 里)          | `import { glob } from 'astro/loaders'`                                                                           |
+| `getStaticPaths` 参数标注 `{ paginate: any }` | 用 `GetStaticPathsOptions`;分页 props 用 `Page<T>` 手动断言                                                      |
+| `markdown.remarkPlugins: [插件]`              | 已弃用。先 `npm install @astrojs/markdown-remark`,再 `processor: unified({ remarkPlugins: [插件] })`(见第 10 条) |
 
 - **经验**:查 API 最可靠的方式是直接看 `node_modules/astro/dist` 里的 `.d.ts` 和源码,官方文档可能滞后于最新版本。
 
@@ -95,7 +95,7 @@
 - **原因**:即使写了 `/* @vite-ignore */`,构建器(rolldown)仍会把动态 import 改写为预加载辅助函数形式,而 Pagefind 这类"构建后才生成、不在模块图里"的运行时文件没有对应的辅助函数定义。
 - **方案**:用 `Function` 构造器把 import 藏起来,构建器看不到就不会改写:
   ```js
-  const mod = await Function('p', 'return import(p)')('/pagefind/pagefind.js');
+  const mod = await Function("p", "return import(p)")("/pagefind/pagefind.js");
   ```
 - **验证经验**:只靠 curl 查文件/响应头是不够的。本项目最后用 Chrome 无头模式(`chrome.exe --headless=new --dump-dom`,配合测试页把结果写进 `<title>`)在真实浏览器里跑通"加载→初始化→搜索→取结果"全流程,才确认修复。以后凡是"浏览器行为"类 bug,优先用无头浏览器复现。
 - **抓控制台报错**:`chrome.exe --headless=new --enable-logging=stderr --v=0 --dump-dom <url> 2>&1 | grep -i CONSOLE` 可以把页面的 JS 报错打到终端。
@@ -117,3 +117,4 @@ const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
 ```
 
 - **另外**:force-graph 自带的 `.d.ts` 与实际用法不符(默认导出不可调用、回调参数类型缺失)。写 `declare module` 的 d.ts 会被包自带的类型覆盖而失效;正确做法是建一个本地包装模块(`src/lib/force-graph.ts`)把默认导出断言成自己的宽松接口,组件从本地模块导入。
+- **包装接口的返回类型不能图省事写 `unknown`**:包装里 `graphData()` 返回类型曾写成 `unknown`(运行时它和其他 accessor 一样返回实例本身),导致链式调用 `.graphData(...).nodeId(...)` 报 TS2571,且该错误让链条后续全部降级为 `any`,回调参数变成隐式 any(TS7006),一共 4 个报错。教训:accessor 类方法一律返回 `ForceGraphInstance`;要拿运行时返回的数据对象时,在调用处用 `as unknown as { links: GraphLink[] }` 断言。

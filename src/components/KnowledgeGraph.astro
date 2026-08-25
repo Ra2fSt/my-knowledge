@@ -110,7 +110,7 @@ const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
         highlightLinks.clear();
         if (node) {
           highlightNodes.add(node as GraphNode);
-          (fg.graphData() as { links: GraphLink[] }).links.forEach((l) => {
+          (fg.graphData() as unknown as { links: GraphLink[] }).links.forEach((l) => {
             const s = l.source as unknown as RenderNode;
             const t = l.target as unknown as RenderNode;
             if (s === node) {
