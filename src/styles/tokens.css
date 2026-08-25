@@ -13,18 +13,18 @@
   --color-surface: #fdfbf5;
   --color-subtle: #ede5d3;
 
-  /* 文字 */
+  /* 文字（muted 在纸面/面板/浅灰三种背景上均 ≥4.5:1 对比度） */
   --color-text: #2b2721;
   --color-text-secondary: #5f5a4e;
-  --color-text-muted: #8f8878;
+  --color-text-muted: #6b6455;
 
   /* 边框 */
   --color-border: #e2d9c3;
 
-  /* 主色（链接、强调） */
-  --color-accent: #2e7d5b;
-  --color-accent-hover: #236447;
-  --color-accent-soft: rgba(46, 125, 91, 0.1);
+  /* 主色（链接、强调）：accent 在纸面上 ≥4.5:1，hover 更深一档保持悬停区分度 */
+  --color-accent: #2a7354;
+  --color-accent-hover: #1e5a3e;
+  --color-accent-soft: rgba(42, 115, 84, 0.1);
 
   /* 代码块 */
   --color-code-bg: #ede5d3;
