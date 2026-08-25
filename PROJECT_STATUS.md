@@ -7,7 +7,7 @@
 个人知识库 / Digital Garden 网站（「我的知识花园」）：
 
 - **Markdown 是唯一内容源**：笔记以 `.md` 文件管理在 Git 里，Frontmatter 写元数据，正文用 `[[双链]]` 连接想法。
-- **纯静态架构**：无后端、无数据库，Astro 构建为静态页面，部署到 Cloudflare Pages（配置与平台解耦，可平移到 Vercel 等）。
+- **纯静态架构**：无后端、无数据库，Astro 构建为静态页面，部署到 Cloudflare Workers（静态资产；配置与平台解耦，可平移到 Vercel 等）。
 - **14 项明确需求**分 7 个阶段实现，每阶段用户验收后再进入下一阶段，不擅自增加需求、不过度设计。
 
 ## 2. 技术栈
@@ -21,9 +21,9 @@
 | 知识图谱 | force-graph 1.51.4（Canvas 2D，客户端懒加载）                                                       |
 | 主题     | CSS 自定义属性，系统偏好 + 手动切换（localStorage）                                                 |
 | 质量工具 | astro check（TS 类型）、Prettier                                                                    |
-| 部署目标 | Cloudflare Pages（`PUBLIC_SITE_URL` 环境变量注入站点地址）                                          |
+| 部署目标 | Cloudflare Workers 静态资产（Workers Builds 连接 GitHub 自动构建，`PUBLIC_SITE_URL` 环境变量注入站点地址）                                          |
 
-## 3. 已完成的功能（阶段 0–5，均经用户验收）
+## 3. 已完成的功能（阶段 0–5 已验收，阶段 6 待最终验收）
 
 - **阶段 0 骨架与主题**：基础布局（Header/Footer/BaseLayout）、米色纸张 + 深紫藏青暗色双主题（系统跟随 + 手动切换 + 防闪烁）、移动端菜单。
 - **阶段 1 内容系统**：6 篇示例笔记、首页（最近笔记 + 分类标签概览）、笔记列表（updatedDate 降序分页 10 篇/页）、笔记详情（TOC、上一篇/下一篇）、分类页、标签页、关于页、笔记状态徽章（学习中/整理中/已掌握/归档）。
@@ -31,7 +31,8 @@
 - **阶段 3 全文搜索**：Ctrl+K / 页头按钮打开弹窗、Pagefind 静态索引、结果关键词高亮（正文 + 标题）、构建产物与开发模式区分提示。
 - **阶段 4 知识图谱**：全局图谱页 `/graph/`（按连接度取前 200 篇、按分类哈希着色、图例、满屏布局）、每篇笔记底部局部图谱（一跳邻居、上限 60 节点）、点击跳转、悬停高亮邻居、拖拽钉住、滚轮缩放、懒加载（client:visible）、主题切换时画布颜色跟随。
 - **阶段 5 订阅与 SEO**：RSS 订阅源、sitemap、robots.txt、友好 404 页（2026-08-25 用户验收通过）。
-- **配套**：`docs/pitfalls.md`（12 个实际踩坑记录）、README、Git 仓库已推送 GitHub（main 分支）。
+- **阶段 6 打磨与上线**：响应式审计与修复、Lighthouse 检查、中文搜索复查、Cloudflare Workers 部署上线、README 收尾（2026-08-25，待用户最终验收）。
+- **配套**：`docs/pitfalls.md`（踩坑合集，持续记录）、README、Git 仓库已推送 GitHub（main 分支）。
 
 ## 4. 当前正在做的功能
 
@@ -40,8 +41,8 @@
 1. ✅ 响应式审计与修复（2026-08-25）：8 个页面在 390/768/1024/1280 宽度零溢出；修复移动端搜索入口消失、图谱页悬浮卡片重叠
 2. ✅ Lighthouse 检查：三个页面 accessibility/best-practices/seo 全 100，performance 98–100（本地服务器无压缩，部署 CDN 后更高）；修复对比度与页脚链接
 3. ✅ 中文搜索复查：9 个查询实测全部准确，**保留 Pagefind 不换 FlexSearch**
-4. ⏳ Cloudflare Pages 实际部署 + 自定义域名
-5. ⏳ README 收尾核对
+4. ✅ Cloudflare Workers 部署（2026-08-25 上线 https://my-knowledge.rafguy329.workers.dev；线上 RSS/sitemap/robots/404/搜索索引全部验证通过；自定义域名列为可选后续）
+5. ✅ README 收尾核对（2026-08-25 完成，待用户最终验收）
 
 ## 5. 尚未完成的功能
 
@@ -55,13 +56,15 @@
 4. **本机网络访问 GitHub 需代理**：git 已配全局代理 `127.0.0.1:10808`；换网络环境后如需直连可去掉该配置。
 5. **force-graph 自带类型声明与实现不符**：用 `src/lib/force-graph.ts` 包装断言；升级 force-graph 后需重新验证类型与运行时行为。包装接口中 accessor 类方法返回类型必须是 `ForceGraphInstance`，写 `unknown` 会让链式调用报错（已修复，见 pitfalls.md）。
 6. 图谱页页脚间距最后调整为 1rem，尚未得到用户视觉确认。
+7. **workers.dev 共享域名国内访问不稳定**：国内直连超时，需开代理，或绑定自有域名解决（Cloudflare 免费方案支持自定义域名；换域名后需同步更新 `PUBLIC_SITE_URL`）。
+8. **构建日志中的 KnowledgeGraph hydration 警告无害**：`client:visible` 加在 Astro 组件上不生效（Astro 组件不参与客户端水合），但组件内 `<script>` 仍会随页面执行，功能正常。
 
 ## 7. 下一步具体任务
 
-**阶段 6（剩余）：**
+**全部阶段已完成。可选后续：**
 
-1. Cloudflare Pages 部署（构建命令 `npm run build`、输出目录 `dist/`、环境变量 `PUBLIC_SITE_URL` 填部署后的真实 URL）
-2. README 收尾核对（部署完成后补部署章节与线上地址）
+1. 绑定自有域名并更新 `PUBLIC_SITE_URL`（解决国内直连 workers.dev 不稳定的问题）
+2. 日常维护：更新 `src/content/notes/` 下的笔记即可，push 后自动重新构建部署
 
 ## 8. 重要的设计决策和约定
 

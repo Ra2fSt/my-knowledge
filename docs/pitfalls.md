@@ -118,3 +118,21 @@ const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
 
 - **另外**:force-graph 自带的 `.d.ts` 与实际用法不符(默认导出不可调用、回调参数类型缺失)。写 `declare module` 的 d.ts 会被包自带的类型覆盖而失效;正确做法是建一个本地包装模块(`src/lib/force-graph.ts`)把默认导出断言成自己的宽松接口,组件从本地模块导入。
 - **包装接口的返回类型不能图省事写 `unknown`**:包装里 `graphData()` 返回类型曾写成 `unknown`(运行时它和其他 accessor 一样返回实例本身),导致链式调用 `.graphData(...).nodeId(...)` 报 TS2571,且该错误让链条后续全部降级为 `any`,回调参数变成隐式 any(TS7006),一共 4 个报错。教训:accessor 类方法一律返回 `ForceGraphInstance`;要拿运行时返回的数据对象时,在调用处用 `as unknown as { links: GraphLink[] }` 断言。
+
+## 12. 新版 Cloudflare 面板的「连接 Git」建的是 Workers 项目,不是 Pages(阶段 6 踩坑)
+
+- **现象**:新版面板里走 Create → GitHub 向导(填 project name / build command / deploy command / API token),部署时报 `The Pages project "xxx" does not exist`;更早时 API 报 `Authentication error [code: 10000]`。
+- **原因**:该向导建的是 **Workers 项目**(URL 形如 `/workers/services/view/<name>`,即 Workers Builds 流程),不是 Pages 项目。用 `wrangler pages deploy` 部署当然找不到 Pages 项目;向导自动创建的 token 也只有 Workers 权限、没有 Pages 权限(反之亦然,权限在 token 编辑页按需添加)。
+- **方案**:
+  - 仓库加 `wrangler.jsonc`,纯静态站点只需声明 assets:
+    ```jsonc
+    {
+      "name": "my-knowledge",
+      "compatibility_date": "2026-08-01",
+      "assets": { "directory": "./dist", "not_found_handling": "404-page" }
+    }
+    ```
+  - 部署命令用 `npx wrangler deploy`(不是 `pages deploy`)。
+  - token 权限(https://dash.cloudflare.com/profile/api-tokens):Workers 部署要「账户 → Workers Scripts → 编辑」,Pages 部署要「账户 → Cloudflare Pages → 编辑」。
+  - `not_found_handling: "404-page"` 才会让缺失路径返回 404.html;`wrangler pages deploy` 不会自动创建项目(先 `wrangler pages project create`)。
+- **验证注意**:workers.dev / pages.dev 共享域名国内直连超时属正常,不代表部署失败;验证线上站点可走本地代理。国内正式使用需绑定自有域名并同步更新 `PUBLIC_SITE_URL`。

@@ -1,6 +1,6 @@
 # 我的知识花园
 
-个人知识库 / Digital Garden 网站，纯静态架构：Markdown 文件是唯一内容源，由 Astro 构建为静态页面，部署到 Cloudflare Pages。
+个人知识库 / Digital Garden 网站，纯静态架构：Markdown 文件是唯一内容源，由 Astro 构建为静态页面，部署到 Cloudflare Workers（静态资产）。
 
 ## 本地开发
 
@@ -21,5 +21,8 @@ npm run check    # TypeScript 类型检查
 
 ## 部署
 
-- 平台：Cloudflare Pages。构建命令 `npm run build`，输出目录 `dist/`，环境变量 `PUBLIC_SITE_URL` 设为站点完整 URL（如 `https://your-site.pages.dev`）。
-- 迁移到 Vercel 等平台时只需导入同一仓库，构建配置相同，无需改动代码。
+- 线上地址：<https://my-knowledge.rafguy329.workers.dev>
+- 平台：Cloudflare Workers 静态资产（Workers Builds 连接 GitHub，push 到 main 自动构建部署）。
+- 构建命令 `npm run build`（构建后 Pagefind 自动生成搜索索引），部署命令 `npx wrangler deploy`；静态资源配置在 `wrangler.jsonc`（`dist/` 目录 + 404 回退）。
+- 环境变量 `PUBLIC_SITE_URL` 设为站点完整 URL（驱动 RSS / sitemap / robots.txt 里的域名）。
+- 迁移到 Vercel 等平台时只需导入同一仓库、设置同样的构建命令与 `PUBLIC_SITE_URL`，无需改动代码。
