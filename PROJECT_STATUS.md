@@ -23,7 +23,7 @@
 | 质量工具 | astro check（TS 类型）、Prettier                                                                    |
 | 部署目标 | Cloudflare Workers 静态资产（Workers Builds 连接 GitHub 自动构建，`PUBLIC_SITE_URL` 环境变量注入站点地址）                                          |
 
-## 3. 已完成的功能（阶段 0–5 已验收，阶段 6 待最终验收）
+## 3. 已完成的功能（阶段 0–6，均经用户验收）
 
 - **阶段 0 骨架与主题**：基础布局（Header/Footer/BaseLayout）、米色纸张 + 深紫藏青暗色双主题（系统跟随 + 手动切换 + 防闪烁）、移动端菜单。
 - **阶段 1 内容系统**：6 篇示例笔记、首页（最近笔记 + 分类标签概览）、笔记列表（updatedDate 降序分页 10 篇/页）、笔记详情（TOC、上一篇/下一篇）、分类页、标签页、关于页、笔记状态徽章（学习中/整理中/已掌握/归档）。
@@ -31,7 +31,7 @@
 - **阶段 3 全文搜索**：Ctrl+K / 页头按钮打开弹窗、Pagefind 静态索引、结果关键词高亮（正文 + 标题）、构建产物与开发模式区分提示。
 - **阶段 4 知识图谱**：全局图谱页 `/graph/`（按连接度取前 200 篇、按分类哈希着色、图例、满屏布局）、每篇笔记底部局部图谱（一跳邻居、上限 60 节点）、点击跳转、悬停高亮邻居、拖拽钉住、滚轮缩放、懒加载（client:visible）、主题切换时画布颜色跟随。
 - **阶段 5 订阅与 SEO**：RSS 订阅源、sitemap、robots.txt、友好 404 页（2026-08-25 用户验收通过）。
-- **阶段 6 打磨与上线**：响应式审计与修复、Lighthouse 检查、中文搜索复查、Cloudflare Workers 部署上线、README 收尾（2026-08-25，待用户最终验收）。
+- **阶段 6 打磨与上线**：响应式审计与修复、Lighthouse 检查、中文搜索复查、Cloudflare Workers 部署上线、README 收尾（2026-08-25，用户已验收）。
 - **配套**：`docs/pitfalls.md`（踩坑合集，持续记录）、`懒鬼使用手册.md`（日常写笔记与发布的最简操作指南）、README、Git 仓库已推送 GitHub（main 分支）。
 
 ## 4. 当前正在做的功能
@@ -42,7 +42,7 @@
 2. ✅ Lighthouse 检查：三个页面 accessibility/best-practices/seo 全 100，performance 98–100（本地服务器无压缩，部署 CDN 后更高）；修复对比度与页脚链接
 3. ✅ 中文搜索复查：9 个查询实测全部准确，**保留 Pagefind 不换 FlexSearch**
 4. ✅ Cloudflare Workers 部署（2026-08-25 上线 https://my-knowledge.rafguy329.workers.dev；线上 RSS/sitemap/robots/404/搜索索引全部验证通过；自定义域名列为可选后续）
-5. ✅ README 收尾核对（2026-08-25 完成，待用户最终验收）
+5. ✅ README 收尾核对（2026-08-25 完成，用户已验收）
 
 ## 5. 尚未完成的功能
 
