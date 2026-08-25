@@ -5,6 +5,9 @@ node_modules/
 dist/
 .astro/
 
+# Wrangler 本地状态目录
+.wrangler/
+
 # 环境变量
 .env
 .env.*
