@@ -108,9 +108,12 @@ const legend = [...new Set(graph.nodes.map((n) => n.category))];
       left: 1.25rem;
     }
 
+    /* 窄屏下 55% + 45% 并排放不下会重叠，图例改到画布右上角 */
     .graph-legend {
-      max-width: 45%;
+      max-width: 55%;
       right: 1.25rem;
+      bottom: auto;
+      top: 1rem;
     }
   }
 </style>

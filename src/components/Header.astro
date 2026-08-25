@@ -157,8 +157,16 @@ function isActive(href: string): boolean {
   }
 
   @media (max-width: 768px) {
-    .site-nav,
+    .site-nav {
+      display: none;
+    }
+
+    /* 移动端保留搜索入口：隐藏文字、只留图标（触屏没有 Ctrl+K 快捷键） */
     .search-button {
+      padding: 0.4rem;
+    }
+
+    .search-button span {
       display: none;
     }
 
