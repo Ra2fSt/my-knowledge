@@ -23,40 +23,34 @@
 | 质量工具 | astro check（TS 类型）、Prettier                                                                    |
 | 部署目标 | Cloudflare Pages（`PUBLIC_SITE_URL` 环境变量注入站点地址）                                          |
 
-## 3. 已完成的功能（阶段 0–4，均经用户验收）
+## 3. 已完成的功能（阶段 0–5，均经用户验收）
 
 - **阶段 0 骨架与主题**：基础布局（Header/Footer/BaseLayout）、米色纸张 + 深紫藏青暗色双主题（系统跟随 + 手动切换 + 防闪烁）、移动端菜单。
 - **阶段 1 内容系统**：6 篇示例笔记、首页（最近笔记 + 分类标签概览）、笔记列表（updatedDate 降序分页 10 篇/页）、笔记详情（TOC、上一篇/下一篇）、分类页、标签页、关于页、笔记状态徽章（学习中/整理中/已掌握/归档）。
 - **阶段 2 双链系统**：`[[笔记名]]` / `[[笔记名|别名]]` 语法（remark 插件转换）、缺失链接提示、出链/反向链接展示、相关笔记（共享标签 +2 / 同分类 +2 / 出链 +3 / 回链 +2，取前 5）。
 - **阶段 3 全文搜索**：Ctrl+K / 页头按钮打开弹窗、Pagefind 静态索引、结果关键词高亮（正文 + 标题）、构建产物与开发模式区分提示。
 - **阶段 4 知识图谱**：全局图谱页 `/graph/`（按连接度取前 200 篇、按分类哈希着色、图例、满屏布局）、每篇笔记底部局部图谱（一跳邻居、上限 60 节点）、点击跳转、悬停高亮邻居、拖拽钉住、滚轮缩放、懒加载（client:visible）、主题切换时画布颜色跟随。
-- **配套**：`docs/pitfalls.md`（11 个实际踩坑记录）、README、Git 仓库已推送 GitHub（main 分支）。
+- **阶段 5 订阅与 SEO**：RSS 订阅源、sitemap、robots.txt、友好 404 页（2026-08-25 用户验收通过）。
+- **配套**：`docs/pitfalls.md`（12 个实际踩坑记录）、README、Git 仓库已推送 GitHub（main 分支）。
 
 ## 4. 当前正在做的功能
 
-**阶段 5：订阅与 SEO（已实现并推送，待用户验收）**：
+**阶段 6：打磨与上线**（进行中）：
 
-- RSS 订阅源 `/rss.xml`（`@astrojs/rss`，全部笔记条目，标题/描述/日期/标签）
-- sitemap 站点地图（`@astrojs/sitemap`，覆盖全部 23 个页面）
-- `/robots.txt`（允许全部抓取，指向 sitemap）
-- 友好 404 页（提示 + 推荐 3 篇笔记 + 返回首页/全部笔记链接）
-- 顺手修复：`npm run check` 遗留的 4 个类型报错（force-graph 包装 `graphData` 返回类型，见 pitfalls.md）
+1. ✅ 响应式审计与修复（2026-08-25）：8 个页面在 390/768/1024/1280 宽度零溢出；修复移动端搜索入口消失、图谱页悬浮卡片重叠
+2. ✅ Lighthouse 检查：三个页面 accessibility/best-practices/seo 全 100，performance 98–100（本地服务器无压缩，部署 CDN 后更高）；修复对比度与页脚链接
+3. ✅ 中文搜索复查：9 个查询实测全部准确，**保留 Pagefind 不换 FlexSearch**
+4. ⏳ Cloudflare Pages 实际部署 + 自定义域名
+5. ⏳ README 收尾核对
 
 ## 5. 尚未完成的功能
 
-只剩一个阶段：
-
-1. **阶段 6：打磨与上线**
-   - 全站响应式审计（重点：图谱页悬浮卡片、搜索弹窗、移动端菜单）
-   - Lighthouse 性能检查
-   - 中文搜索质量复查（必要时换 FlexSearch）
-   - Cloudflare Pages 实际部署 + 自定义域名
-   - README 收尾核对
+只剩阶段 6（见上）。
 
 ## 6. 已知问题
 
 1. **Windows 上 `astro preview` 访问中文路径报 500**（URIError，响应体其实是正确 HTML）。仅影响本地预览命令；部署到 Cloudflare Pages 不受影响。本地验证构建产物请用 `python -m http.server`（见 pitfalls.md 第 4 条）。
-2. **Pagefind 对中文没有分词/词干支持**（构建时会有 warning）。中文可以按子串搜到，但不会跨词匹配；阶段 6 若觉得不够用可换 FlexSearch。
+2. **Pagefind 对中文没有分词/词干支持**（构建时会有 warning）。中文连续短语可整段搜到，不会跨词匹配。2026-08-25 阶段 6 实测复查（9 个查询）结论：**保留 Pagefind**，个人知识库规模下足够，FlexSearch 需额外中文分词库、复杂度不值。
 3. **dev 服务器是后台守护进程**：改路由文件名或 astro.config 后需要手动杀掉重启（netstat + taskkill，见 pitfalls.md 第 5 条）。
 4. **本机网络访问 GitHub 需代理**：git 已配全局代理 `127.0.0.1:10808`；换网络环境后如需直连可去掉该配置。
 5. **force-graph 自带类型声明与实现不符**：用 `src/lib/force-graph.ts` 包装断言；升级 force-graph 后需重新验证类型与运行时行为。包装接口中 accessor 类方法返回类型必须是 `ForceGraphInstance`，写 `unknown` 会让链式调用报错（已修复，见 pitfalls.md）。
@@ -64,19 +58,10 @@
 
 ## 7. 下一步具体任务
 
-**当前（等待用户验收阶段 5）：**
+**阶段 6（剩余）：**
 
-- 本地预览验证：`npm run dev`（或构建后用 `python -m http.server` 打开 `dist/`）
-  - 访问 `/rss.xml`、`/robots.txt`、`/sitemap-index.xml`、任意不存在路径（如 `/xxx`）看 404 页
-  - 注意：本地产物中的域名是 `http://localhost:4321`（未设 `PUBLIC_SITE_URL` 的兜底），部署后自动变成真实域名
-
-**阶段 6（验收后按顺序）：**
-
-1. 响应式检查与修复
-2. Lighthouse 跑分并处理发现的问题
-3. 中文搜索体验复查，决定是否换 FlexSearch
-4. Cloudflare Pages 部署（构建命令 `npm run build`、输出目录 `dist/`、环境变量 `PUBLIC_SITE_URL`）
-5. README 与 PROJECT_STATUS.md 收尾
+1. Cloudflare Pages 部署（构建命令 `npm run build`、输出目录 `dist/`、环境变量 `PUBLIC_SITE_URL` 填部署后的真实 URL）
+2. README 收尾核对（部署完成后补部署章节与线上地址）
 
 ## 8. 重要的设计决策和约定
 
