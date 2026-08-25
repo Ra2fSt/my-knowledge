@@ -2,6 +2,8 @@
 
 个人知识库 / Digital Garden 网站，纯静态架构：Markdown 文件是唯一内容源，由 Astro 构建为静态页面，部署到 Cloudflare Workers（静态资产）。
 
+日常写笔记与发布的最简操作，见 [懒鬼使用手册](./懒鬼使用手册.md)。
+
 ## 本地开发
 
 ```bash
