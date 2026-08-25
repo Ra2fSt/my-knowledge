@@ -1,6 +1,6 @@
 # 项目状态总览
 
-> 本文件由开发过程实时维护。内容以仓库当前实际代码为准，最后更新于 2026-08-24。
+> 本文件由开发过程实时维护。内容以仓库当前实际代码为准，最后更新于 2026-08-25。
 
 ## 1. 项目目标
 
@@ -12,16 +12,16 @@
 
 ## 2. 技术栈
 
-| 层 | 选型 |
-|---|---|
-| 框架 | Astro 7.2.4（静态输出，Node ≥ 20.3） |
-| 内容 | astro:content + glob loader + zod schema 校验 |
+| 层       | 选型                                                                                                |
+| -------- | --------------------------------------------------------------------------------------------------- |
+| 框架     | Astro 7.2.4（静态输出，Node ≥ 20.3）                                                                |
+| 内容     | astro:content + glob loader + zod schema 校验                                                       |
 | Markdown | @astrojs/markdown-remark 的 unified 处理器（Astro 7 默认 Sätteri 不支持 remark 插件）+ 自研双链插件 |
-| 全文搜索 | Pagefind 1.5.2（构建后生成 `/pagefind/` 静态索引） |
-| 知识图谱 | force-graph 1.51.4（Canvas 2D，客户端懒加载） |
-| 主题 | CSS 自定义属性，系统偏好 + 手动切换（localStorage） |
-| 质量工具 | astro check（TS 类型）、Prettier |
-| 部署目标 | Cloudflare Pages（`PUBLIC_SITE_URL` 环境变量注入站点地址） |
+| 全文搜索 | Pagefind 1.5.2（构建后生成 `/pagefind/` 静态索引）                                                  |
+| 知识图谱 | force-graph 1.51.4（Canvas 2D，客户端懒加载）                                                       |
+| 主题     | CSS 自定义属性，系统偏好 + 手动切换（localStorage）                                                 |
+| 质量工具 | astro check（TS 类型）、Prettier                                                                    |
+| 部署目标 | Cloudflare Pages（`PUBLIC_SITE_URL` 环境变量注入站点地址）                                          |
 
 ## 3. 已完成的功能（阶段 0–4，均经用户验收）
 
@@ -34,18 +34,19 @@
 
 ## 4. 当前正在做的功能
 
-**阶段 4 收尾（已推送，待用户最终视觉确认）**：图谱页满屏布局的页脚间距微调——页脚间距通过 CSS 变量 `--footer-margin-top` 覆盖，本页设为 1rem，与顶部间距对称。
+**阶段 5：订阅与 SEO（已实现并推送，待用户验收）**：
+
+- RSS 订阅源 `/rss.xml`（`@astrojs/rss`，全部笔记条目，标题/描述/日期/标签）
+- sitemap 站点地图（`@astrojs/sitemap`，覆盖全部 23 个页面）
+- `/robots.txt`（允许全部抓取，指向 sitemap）
+- 友好 404 页（提示 + 推荐 3 篇笔记 + 返回首页/全部笔记链接）
+- 顺手修复：`npm run check` 遗留的 4 个类型报错（force-graph 包装 `graphData` 返回类型，见 pitfalls.md）
 
 ## 5. 尚未完成的功能
 
-只剩两个阶段：
+只剩一个阶段：
 
-1. **阶段 5：订阅与 SEO**
-   - RSS 订阅源 `rss.xml`（需安装 `@astrojs/rss`）
-   - sitemap 站点地图（需安装 `@astrojs/sitemap`）
-   - `robots.txt`
-   - 友好 404 页（带推荐笔记）
-2. **阶段 6：打磨与上线**
+1. **阶段 6：打磨与上线**
    - 全站响应式审计（重点：图谱页悬浮卡片、搜索弹窗、移动端菜单）
    - Lighthouse 性能检查
    - 中文搜索质量复查（必要时换 FlexSearch）
@@ -58,20 +59,19 @@
 2. **Pagefind 对中文没有分词/词干支持**（构建时会有 warning）。中文可以按子串搜到，但不会跨词匹配；阶段 6 若觉得不够用可换 FlexSearch。
 3. **dev 服务器是后台守护进程**：改路由文件名或 astro.config 后需要手动杀掉重启（netstat + taskkill，见 pitfalls.md 第 5 条）。
 4. **本机网络访问 GitHub 需代理**：git 已配全局代理 `127.0.0.1:10808`；换网络环境后如需直连可去掉该配置。
-5. **force-graph 自带类型声明与实现不符**：用 `src/lib/force-graph.ts` 包装断言；升级 force-graph 后需重新验证类型与运行时行为。
-6. 图谱页页脚间距最后调整为 1rem，尚未得到用户视觉确认（见第 4 节）。
+5. **force-graph 自带类型声明与实现不符**：用 `src/lib/force-graph.ts` 包装断言；升级 force-graph 后需重新验证类型与运行时行为。包装接口中 accessor 类方法返回类型必须是 `ForceGraphInstance`，写 `unknown` 会让链式调用报错（已修复，见 pitfalls.md）。
+6. 图谱页页脚间距最后调整为 1rem，尚未得到用户视觉确认。
 
 ## 7. 下一步具体任务
 
-**阶段 5（按顺序）：**
-1. `npm install @astrojs/rss @astrojs/sitemap`
-2. 新建 `src/pages/rss.xml.ts`（全部笔记条目，标题/描述/日期）
-3. `astro.config.mjs` 中启用 sitemap 集成（`site` 已支持 `PUBLIC_SITE_URL`）
-4. 新建 `src/pages/robots.txt.ts`（允许全部、指向 sitemap）
-5. 新建 `src/pages/404.astro`（提示 + 推荐几篇笔记，沿用 BaseLayout）
-6. 构建 + 无头浏览器验证 + 推送，交用户验收
+**当前（等待用户验收阶段 5）：**
 
-**阶段 6（按顺序）：**
+- 本地预览验证：`npm run dev`（或构建后用 `python -m http.server` 打开 `dist/`）
+  - 访问 `/rss.xml`、`/robots.txt`、`/sitemap-index.xml`、任意不存在路径（如 `/xxx`）看 404 页
+  - 注意：本地产物中的域名是 `http://localhost:4321`（未设 `PUBLIC_SITE_URL` 的兜底），部署后自动变成真实域名
+
+**阶段 6（验收后按顺序）：**
+
 1. 响应式检查与修复
 2. Lighthouse 跑分并处理发现的问题
 3. 中文搜索体验复查，决定是否换 FlexSearch

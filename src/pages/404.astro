@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NoteCard from '../components/NoteCard.astro';
+import { getNotes } from '../lib/notes';
+
+// 友好 404：提示 + 推荐几篇笔记（默认不展示归档笔记）
+const notes = await getNotes();
+const suggested = notes.filter((n) => n.data.status !== 'archived').slice(0, 3);
+---
+
+<BaseLayout title="页面未找到">
+  <div class="container not-found">
+    <h1 class="code">404</h1>
+    <p class="message">这个页面不存在，可能已被移动或删除。</p>
+    <p class="links">
+      <a href="/">回到首页</a>
+      <span class="sep">·</span>
+      <a href="/notes/">浏览全部笔记</a>
+    </p>
+
+    {
+      suggested.length > 0 && (
+        <section class="suggest">
+          <h2>不妨看看这几篇</h2>
+          {suggested.map((note) => <NoteCard note={note} />)}
+        </section>
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .not-found {
+    padding: 5rem 1.5rem;
+    text-align: center;
+  }
+
+  .code {
+    margin: 0;
+    font-size: clamp(4rem, 12vw, 7rem);
+    line-height: 1;
+    color: var(--color-accent);
+  }
+
+  .message {
+    margin: 1.5rem 0 0;
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+  }
+
+  .links {
+    margin: 1rem 0 0;
+    font-size: 1rem;
+  }
+
+  .sep {
+    margin: 0 0.5rem;
+    color: var(--color-text-muted);
+  }
+
+  .suggest {
+    margin: 4rem auto 0;
+    max-width: 40rem;
+    text-align: left;
+    padding: 1.5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+
+  .suggest h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+  }
+</style>
