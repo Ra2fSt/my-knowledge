@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import NoteCard from '../components/NoteCard.astro';
 import { getNotes, getCategoryCounts, getTagCounts, noteUpdatedAt } from '../lib/notes';
 import { formatDate } from '../lib/utils';
+import { SUBJECTS } from '../lib/subjects';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
 const notes = await getNotes();
@@ -16,20 +17,48 @@ const latest = notes.length > 0 ? formatDate(noteUpdatedAt(notes[0])) : '—';
 
 <BaseLayout>
   <section class="hero">
+    <p class="home-eyebrow">DIGITAL GARDEN / 持续生长的知识</p>
     <h1>{SITE_TITLE}</h1>
     <p class="lead">{SITE_DESCRIPTION}</p>
     <p class="stats">
-      共 {notes.length} 篇笔记 · {categories.length} 个分类 · {tags.length} 个标签 · 最近更新 {latest}
+      共 {notes.length} 篇笔记 · {categories.length} 个分类 · {tags.length} 个标签 · 最近更新 {
+        latest
+      }
     </p>
   </section>
 
+  <section class="container learning-entry" aria-labelledby="learning-title">
+    <div class="learning-card">
+      <div>
+        <p class="home-eyebrow">新的大章节 / COMPUTER SCIENCE</p><h2 id="learning-title">
+          计算机基础，开始连成一张网。
+        </h2><p>
+          408 四科主干 + 数电、编译、汇编旁支。<br />先看计组与数据结构总览，再沿知识联系向下探索。
+        </p><div class="learning-actions">
+          <a href="/learn/">进入学习地图 ↗</a><a href="/graph/?scope=computer">查看关系图谱 →</a>
+        </div>
+      </div><div class="subject-shortcuts">
+        {
+          SUBJECTS.map((subject) => (
+            <a href={'/notes/' + subject.id + '/'} style={'--subject:' + subject.color}>
+              <span>{subject.code}</span>
+              {subject.name}
+              <span aria-hidden="true">↗</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
   <div class="container home-grid">
     <section class="panel">
       <h2>最近更新</h2>
       {
         recent.length > 0 ? (
           <div>
-            {recent.map((note) => <NoteCard note={note} />)}
+            {recent.map((note) => (
+              <NoteCard note={note} />
+            ))}
           </div>
         ) : (
           <p class="empty">暂无笔记</p>
@@ -46,7 +75,8 @@ const latest = notes.length > 0 ? formatDate(noteUpdatedAt(notes[0])) : '—';
             {categories.map(([category, count]) => (
               <li>
                 <a href={`/categories/${encodeURIComponent(category)}/`}>
-                  {category}<span class="count">{count}</span>
+                  {category}
+                  <span class="count">{count}</span>
                 </a>
               </li>
             ))}
@@ -65,7 +95,8 @@ const latest = notes.length > 0 ? formatDate(noteUpdatedAt(notes[0])) : '—';
             {topTags.map(([tag, count]) => (
               <li>
                 <a href={`/tags/${encodeURIComponent(tag)}/`}>
-                  #{tag}<span class="count">{count}</span>
+                  #{tag}
+                  <span class="count">{count}</span>
                 </a>
               </li>
             ))}
@@ -177,6 +208,81 @@ const latest = notes.length > 0 ? formatDate(noteUpdatedAt(notes[0])) : '—';
 
     .panel:first-child {
       grid-row: auto;
+    }
+  }
+</style>
+
+<style>
+  .home-eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    color: var(--color-text-muted);
+    margin: 0 0 1rem;
+  }
+  .learning-entry {
+    margin-bottom: 1.8rem;
+  }
+  .learning-card {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 2rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    border-top: 3px solid var(--color-accent);
+  }
+  .learning-card h2 {
+    font-size: 1.65rem;
+    margin: 0.5rem 0 1rem;
+  }
+  .learning-card p:not(.home-eyebrow) {
+    font-size: 0.93rem;
+    color: var(--color-text-secondary);
+  }
+  .learning-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    font-size: 0.9rem;
+    margin-top: 1.3rem;
+  }
+  .learning-actions a:first-child {
+    font-weight: 700;
+  }
+  .subject-shortcuts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+  .subject-shortcuts a {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.4rem 0.7rem;
+    border-left: 3px solid var(--subject);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: 0.85rem;
+    border-radius: 0 4px 4px 0;
+  }
+  .subject-shortcuts span:first-child {
+    font: 0.7rem var(--font-mono);
+    width: 2.4rem;
+    color: var(--color-text-muted);
+  }
+  .subject-shortcuts span:last-child {
+    margin-left: auto;
+    color: var(--color-text-muted);
+  }
+  @media (max-width: 760px) {
+    .learning-card {
+      grid-template-columns: 1fr;
+      padding: 1.3rem;
+      gap: 1.3rem;
+    }
+    .learning-card h2 {
+      font-size: 1.35rem;
     }
   }
 </style>

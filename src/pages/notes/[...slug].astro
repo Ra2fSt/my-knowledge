@@ -2,19 +2,30 @@
 import { render } from 'astro:content';
 import NoteLayout from '../../layouts/NoteLayout.astro';
 import { getNotes } from '../../lib/notes';
-import { buildTitleIndex, getBacklinks, getOutboundNotes, getRelatedNotes } from '../../lib/wikilinks';
+import {
+  buildTitleIndex,
+  getBacklinks,
+  getOutboundNotes,
+  getRelatedNotes,
+} from '../../lib/wikilinks';
 import { buildLocalGraph } from '../../lib/graph';
 
 export async function getStaticPaths() {
   const notes = await getNotes();
   return notes.map((note, index) => {
     // 上一篇/下一篇：按 updatedDate 降序的相邻笔记
-    const prev = index > 0
-      ? { id: notes[index - 1].id, title: notes[index - 1].data.title }
-      : null;
-    const next = index < notes.length - 1
-      ? { id: notes[index + 1].id, title: notes[index + 1].data.title }
-      : null;
+    const sequence = note.data.section
+      ? notes
+          .filter((n) => n.data.parent === note.data.parent && n.data.section === note.data.section)
+          .sort((a, b) => a.data.order - b.data.order)
+      : notes.filter((n) => !n.data.section);
+    index = sequence.findIndex((n) => n.id === note.id);
+    const prev =
+      index > 0 ? { id: sequence[index - 1].id, title: sequence[index - 1].data.title } : null;
+    const next =
+      index < sequence.length - 1
+        ? { id: sequence[index + 1].id, title: sequence[index + 1].data.title }
+        : null;
     return { params: { slug: note.id }, props: { note, prev, next } };
   });
 }

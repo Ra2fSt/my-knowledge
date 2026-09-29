@@ -1,5 +1,6 @@
 ---
 import StatusBadge from './StatusBadge.astro';
+import { categoryColor, COVERAGE_LABELS } from '../lib/subjects';
 import { formatDate } from '../lib/utils';
 import { noteUpdatedAt, UNCATEGORIZED } from '../lib/notes';
 import type { NoteEntry } from '../lib/notes';
@@ -13,11 +14,12 @@ const { title, description, category, tags, status } = note.data;
 const updated = noteUpdatedAt(note);
 ---
 
-<article class="note-card">
+<article class="note-card" style={`--subject-color:${categoryColor(category ?? UNCATEGORIZED)}`}>
   <a class="note-title" href={`/notes/${note.id}/`}>{title}</a>
   {description && <p class="note-description">{description}</p>}
   <div class="note-meta">
     <StatusBadge status={status} />
+    {note.data.section && <span>{COVERAGE_LABELS[note.data.coverage]}</span>}
     <time datetime={updated.toISOString()}>{formatDate(updated)}</time>
     <span class="sep">·</span>
     <a class="note-category" href={`/categories/${encodeURIComponent(category ?? UNCATEGORIZED)}/`}>
@@ -40,7 +42,8 @@ const updated = noteUpdatedAt(note);
 
 <style>
   .note-card {
-    padding: 1.1rem 0;
+    padding: 1.1rem 0 1.1rem 1rem;
+    border-left: 3px solid var(--subject-color);
     border-bottom: 1px solid var(--color-border);
   }
 

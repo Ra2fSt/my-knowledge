@@ -8,6 +8,8 @@ import { formatDate } from '../lib/utils';
 import { noteUpdatedAt, UNCATEGORIZED } from '../lib/notes';
 import type { NoteEntry } from '../lib/notes';
 import type { GraphData } from '../lib/graph';
+import { getNotes } from '../lib/notes';
+import { COVERAGE_LABELS, RELATION_LABELS, categoryColor } from '../lib/subjects';
 
 interface Props {
   note: NoteEntry;
@@ -23,35 +25,117 @@ interface Props {
 const { note, headings, prev, next, outbound, backlinks, related, localGraph } = Astro.props;
 const { title, description, category, tags, status, pubDate } = note.data;
 const updated = noteUpdatedAt(note);
+const allNotes = await getNotes();
+const byId = new Map(allNotes.map((n) => [n.id, n]));
+const ancestors: NoteEntry[] = [];
+let parent = note.data.parent;
+while (parent && byId.has(parent)) {
+  const n = byId.get(parent)!;
+  ancestors.unshift(n);
+  parent = n.data.parent;
+}
+const children = allNotes
+  .filter((n) => n.data.parent === note.id)
+  .sort((a, b) => a.data.order - b.data.order);
+const incoming = allNotes.flatMap((n) =>
+  n.data.relations.filter((r) => r.target === note.id).map((r) => ({ source: n, relation: r })),
+);
 ---
 
 <BaseLayout title={title} description={description}>
   <div class="note-layout container">
     <article class="note-article" data-pagefind-body>
-      <header class="note-header">
+      {
+        note.data.section && (
+          <nav class="breadcrumbs" aria-label="章节路径" data-pagefind-ignore>
+            <a href="/learn/">计算机基础</a>
+            {ancestors
+              .filter((n) => n.data.kind !== 'hub')
+              .map((n) => (
+                <>
+                  <span>/</span>
+                  <a href={'/notes/' + n.id + '/'}>{n.data.title}</a>
+                </>
+              ))}
+            <>
+              <span>/</span>
+              <span aria-current="page">{title}</span>
+            </>
+          </nav>
+        )
+      }
+      <header
+        class="note-header"
+        style={note.data.section
+          ? 'border-top: 3px solid ' +
+            categoryColor(category ?? UNCATEGORIZED) +
+            ';padding-top:1.2rem'
+          : ''}
+      >
+        {
+          note.data.section && (
+            <p class="coverage">
+              {COVERAGE_LABELS[note.data.coverage]} · 内容完整度与个人掌握状态分开记录
+            </p>
+          )
+        }
         <h1>{title}</h1>
         {description && <p class="note-desc">{description}</p>}
         <div class="note-meta">
           <StatusBadge status={status} />
           <span>发布于 {formatDate(pubDate)}</span>
-          {
-            updated.getTime() !== pubDate.getTime() && (
-              <span>· 更新于 {formatDate(updated)}</span>
-            )
-          }
+          {updated.getTime() !== pubDate.getTime() && <span>· 更新于 {formatDate(updated)}</span>}
           <span>·</span>
           <a href={`/categories/${encodeURIComponent(category ?? UNCATEGORIZED)}/`}>
             {category ?? UNCATEGORIZED}
           </a>
-          {tags.map((tag) => (
-            <a href={`/tags/${encodeURIComponent(tag)}/`}>#{tag}</a>
-          ))}
+          {tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}/`}>#{tag}</a>)}
         </div>
       </header>
 
+      {
+        note.data.section && (
+          <details class="mobile-toc" data-pagefind-ignore>
+            <>
+              <summary>本页目录</summary>
+              <Toc headings={headings} />
+            </>
+          </details>
+        )
+      }
       <div class="note-content">
         <slot />
       </div>
+      {
+        (note.data.relations.length > 0 || incoming.length > 0) && (
+          <section class="link-section" data-pagefind-ignore>
+            <h2 class="section-title">关系说明</h2>
+            <p class="section-hint">
+              1 弱关联 · 2 支撑联系 · 3 核心联系；箭头文字说明关系方向，线宽不代表考试频率。
+            </p>
+            <ul class="relation-list">
+              {note.data.relations.map((r) => (
+                <li>
+                  <strong>
+                    {r.strength}/3 · {RELATION_LABELS[r.type]}
+                  </strong>{' '}
+                  <a href={'/notes/' + r.target + '/'}>{byId.get(r.target)?.data.title}</a>
+                  <p>{r.reason}</p>
+                </li>
+              ))}
+              {incoming.map(({ source, relation: r }) => (
+                <li>
+                  <a href={'/notes/' + source.id + '/'}>{source.data.title}</a> →{' '}
+                  <strong>
+                    {RELATION_LABELS[r.type]}本篇 · {r.strength}/3
+                  </strong>
+                  <p>{r.reason}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
 
       {
         related.length > 0 && (
@@ -91,7 +175,9 @@ const updated = noteUpdatedAt(note);
             <h2 class="section-title">本笔记链接到</h2>
             <div class="outbound-chips">
               {outbound.map((n) => (
-                <a class="chip" href={`/notes/${n.id}/`}>{n.data.title}</a>
+                <a class="chip" href={`/notes/${n.id}/`}>
+                  {n.data.title}
+                </a>
               ))}
             </div>
           </section>
@@ -103,12 +189,7 @@ const updated = noteUpdatedAt(note);
           <section class="link-section" data-pagefind-ignore>
             <h2 class="section-title">局部图谱</h2>
             <p class="section-hint">本笔记与直接相连的笔记（点击节点跳转，可拖动）</p>
-            <KnowledgeGraph
-              nodes={localGraph.nodes}
-              links={localGraph.links}
-              height={320}
-              client:visible
-            />
+            <KnowledgeGraph nodes={localGraph.nodes} links={localGraph.links} height={320} />
           </section>
         )
       }
@@ -144,6 +225,22 @@ const updated = noteUpdatedAt(note);
     </article>
 
     <aside class="note-sidebar" data-pagefind-ignore>
+      {
+        note.data.section && (
+          <section class="chapter-nav">
+            <a href="/learn/">← 返回学科地图</a>
+            {children.length > 0 && (
+              <ul>
+                {children.map((n) => (
+                  <li>
+                    <a href={'/notes/' + n.id + '/'}>{n.data.title.split(' · ').pop()}</a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )
+      }
       <Toc headings={headings} />
     </aside>
   </div>
@@ -327,6 +424,61 @@ const updated = noteUpdatedAt(note);
 
     .note-sidebar {
       display: none;
+    }
+  }
+</style>
+
+<style>
+  .breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.3rem;
+  }
+  .coverage {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin: 0 0 0.7rem;
+  }
+  .chapter-nav {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    background: var(--color-surface);
+  }
+  .chapter-nav p {
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+  }
+  .chapter-nav ul {
+    padding-left: 1.1rem;
+  }
+  .chapter-nav li {
+    margin: 0.4rem 0;
+  }
+  .relation-list {
+    padding-left: 1.2rem;
+    font-size: 0.9rem;
+  }
+  .relation-list p {
+    margin: 0.2rem 0 1rem;
+    color: var(--color-text-secondary);
+  }
+  .mobile-toc {
+    display: none;
+    margin: 1rem 0;
+    padding: 0.7rem 1rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+  }
+  @media (max-width: 1000px) {
+    .mobile-toc {
+      display: block;
     }
   }
 </style>

@@ -40,7 +40,7 @@ function updatedAt(note: NoteEntry): Date {
 export function getOutboundNotes(note: NoteEntry, index: Map<string, NoteEntry>): NoteEntry[] {
   const seen = new Set<string>();
   const outbound: NoteEntry[] = [];
-  for (const name of extractWikilinkTargets(note.body ?? '')) {
+  for (const name of getLinkTargets(note)) {
     const target = index.get(name);
     if (target && target.id !== note.id && !seen.has(target.id)) {
       seen.add(target.id);
@@ -54,11 +54,11 @@ export function getOutboundNotes(note: NoteEntry, index: Map<string, NoteEntry>)
 export function getBacklinks(
   note: NoteEntry,
   notes: NoteEntry[],
-  index: Map<string, NoteEntry>
+  index: Map<string, NoteEntry>,
 ): NoteEntry[] {
   return notes.filter((other) => {
     if (other.id === note.id) return false;
-    return extractWikilinkTargets(other.body ?? '').some((name) => {
+    return getLinkTargets(other).some((name) => {
       const target = index.get(name);
       return target !== undefined && target.id === note.id;
     });
@@ -72,7 +72,7 @@ export function getRelatedNotes(
   note: NoteEntry,
   notes: NoteEntry[],
   index: Map<string, NoteEntry>,
-  limit = 5
+  limit = 5,
 ): NoteEntry[] {
   const outboundIds = new Set(getOutboundNotes(note, index).map((n) => n.id));
   const backlinkIds = new Set(getBacklinks(note, notes, index).map((n) => n.id));
@@ -90,10 +90,15 @@ export function getRelatedNotes(
       return { note: other, score };
     })
     .filter((item) => item.score > 0)
-    .sort(
-      (a, b) =>
-        b.score - a.score || updatedAt(b.note).getTime() - updatedAt(a.note).getTime()
-    );
+    .sort((a, b) => b.score - a.score || updatedAt(b.note).getTime() - updatedAt(a.note).getTime());
 
   return scored.slice(0, limit).map((item) => item.note);
+}
+
+function getLinkTargets(note: NoteEntry): string[] {
+  return [
+    ...extractWikilinkTargets(note.body ?? ''),
+    ...(note.data.parent ? [note.data.parent] : []),
+    ...(note.data.relations ?? []).map((r) => r.target),
+  ];
 }

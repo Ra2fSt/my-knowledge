@@ -9,6 +9,7 @@ export { UNCATEGORIZED };
 // 全部笔记，按 updatedDate 降序（缺省时用 pubDate），同日按 pubDate 降序
 export async function getNotes(): Promise<NoteEntry[]> {
   const notes = await getCollection('notes');
+  validateStructure(notes);
   return notes.sort(compareByUpdated);
 }
 
@@ -45,9 +46,7 @@ export function getTagCounts(notes: NoteEntry[]): Map<string, number> {
 }
 
 function sortCountMap(map: Map<string, number>): Map<string, number> {
-  return new Map(
-    [...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh'))
-  );
+  return new Map([...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh')));
 }
 
 // 某分类下的笔记（未设置分类的归入「未分类」）
@@ -58,4 +57,24 @@ export function notesByCategory(notes: NoteEntry[], category: string): NoteEntry
 // 某标签下的笔记
 export function notesByTag(notes: NoteEntry[], tag: string): NoteEntry[] {
   return notes.filter((n) => n.data.tags.includes(tag));
+}
+
+// 强关系与目录是结构数据：写错目标时构建失败，避免图谱静默丢边。
+function validateStructure(notes: NoteEntry[]): void {
+  const byId = new Map(notes.map((n) => [n.id, n]));
+  for (const note of notes) {
+    for (const target of [note.data.parent, ...note.data.relations.map((r) => r.target)].filter(
+      Boolean,
+    ) as string[]) {
+      if (!byId.has(target) || target === note.id)
+        throw new Error('无效结构链接：' + note.id + ' → ' + target);
+    }
+    const seen = new Set([note.id]);
+    let parent = note.data.parent;
+    while (parent) {
+      if (seen.has(parent)) throw new Error('目录循环：' + note.id);
+      seen.add(parent);
+      parent = byId.get(parent)?.data.parent;
+    }
+  }
 }

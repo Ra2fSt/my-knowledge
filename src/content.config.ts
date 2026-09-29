@@ -11,10 +11,23 @@ const notes = defineCollection({
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
     category: z.string().optional(),
+    section: z.enum(['computer-foundations']).optional(),
+    kind: z.enum(['hub', 'subject', 'chapter', 'concept']).default('concept'),
+    coverage: z.enum(['outline', 'overview', 'detail']).default('detail'),
+    parent: z.string().optional(),
+    order: z.number().int().nonnegative().default(99),
+    relations: z
+      .array(
+        z.object({
+          target: z.string().min(1),
+          type: z.enum(['prerequisite', 'support', 'application', 'contrast']),
+          strength: z.number().int().min(1).max(3).default(2),
+          reason: z.string().min(1),
+        }),
+      )
+      .default([]),
     tags: z.array(z.string()).default([]),
-    status: z
-      .enum(['learning', 'organizing', 'mastered', 'archived'])
-      .default('organizing'),
+    status: z.enum(['learning', 'organizing', 'mastered', 'archived']).default('organizing'),
   }),
 });
 

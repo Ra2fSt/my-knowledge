@@ -1,0 +1,473 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getNotes } from '../../lib/notes';
+import { SUBJECTS, COVERAGE_LABELS } from '../../lib/subjects';
+const notes = await getNotes();
+const study = notes.filter((n) => n.data.section === 'computer-foundations');
+const chapters = (id: string) =>
+  study.filter((n) => n.data.parent === id).sort((a, b) => a.data.order - b.data.order);
+const overview = (id: string) => study.find((n) => n.id === id)!;
+---
+
+<BaseLayout
+  title="计算机基础 · 学习地图"
+  description="408 四科与数字逻辑、编译原理、汇编的学习地图、章节考点与知识联系。"
+>
+  <div class="container study-page">
+    <nav class="eyebrow" aria-label="路径"><a href="/">知识花园</a><span>/</span>计算机基础</nav>
+    <header class="study-hero">
+      <div>
+        <p class="eyebrow">COMPUTER SCIENCE / 学习地图</p><h1>
+          把知识连起来，<br /><em>让理解长出来。</em>
+        </h1><p class="intro">
+          从算法到电路，从一条指令到整个系统。<br />四科主干，三条旁支，一张可以持续生长的学习地图。
+        </p><div class="hero-actions">
+          <a class="primary" href="/notes/cs-foundations/">阅读总导航 ↗</a><a
+            href="/graph/?scope=computer">探索知识联系 →</a>
+        </div>
+      </div>
+      <aside class="study-summary">
+        <span class="summary-number">04 <small>+ 03</small></span><h2>主干学科与专业旁支</h2><p>
+          {study.length} 篇学习笔记 · {
+            chapters('ds-overview').length + chapters('co-overview').length
+          } 个核心章节地图
+        </p><div class="summary-divider"></div><p>
+          <b>先学懂，再填满</b><br />计组与数据结构总览已建<br />本学期旁支：数字逻辑
+        </p><span class="tiny">内容完整度 ≠ 个人掌握程度</span>
+      </aside>
+    </header>
+    <section aria-labelledby="core-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">01 / CORE</p><h2 id="core-title">408 四科主干</h2></div><span
+          >从总览进入，逐章向下生长</span>
+      </div>
+      <div class="subject-grid">
+        {
+          SUBJECTS.filter((s) => !s.branch).map((s) => (
+            <article class="subject-card" style={`--subject:${s.color}`}>
+              <div class="card-top">
+                <>
+                  <span class="subject-code">{s.code}</span>
+                  <span class="coverage">{COVERAGE_LABELS[overview(s.id).data.coverage]}</span>
+                </>
+              </div>
+              <>
+                <h3>
+                  <a href={`/notes/${s.id}/`}>
+                    {s.name}
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                </h3>
+                <p>{s.description}</p>
+              </>
+              {chapters(s.id).length ? (
+                <ol class="chapter-list">
+                  {chapters(s.id).map((n) => (
+                    <li>
+                      <a href={`/notes/${n.id}/`}>{n.data.title.split(' · ').pop()}</a>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <div class="outline-note">
+                  <p>
+                    {s.code === 'OS'
+                      ? '进程与线程 / 同步与死锁 / 内存管理 / 文件系统 / I/O'
+                      : '物理层 / 链路层 / 网络层 / 传输层 / 应用层'}
+                  </p>
+                  <span>已有章节规划与填充任务，等待展开。</span>
+                </div>
+              )}
+              <a class="card-entry" href={`/notes/${s.id}/`}>
+                打开学科总览 <span>→</span>
+              </a>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+    <section aria-labelledby="branch-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">02 / BRANCHES</p><h2 id="branch-title">向外生长的旁支</h2>
+        </div><span>与主干互相解释，而非孤立背诵</span>
+      </div><div class="branch-grid">
+        {
+          SUBJECTS.filter((s) => s.branch).map((s) => (
+            <a class="branch-card" href={`/notes/${s.id}/`} style={`--subject:${s.color}`}>
+              <>
+                <span class="subject-code">{s.code}</span>
+                <h3>
+                  {s.name} <span>↗</span>
+                </h3>
+                <p>{s.description}</p>
+                <span class="tiny">
+                  {s.id === 'digital-logic'
+                    ? '本学期优先 · 电路 → ALU → CPU'
+                    : s.id === 'compiler'
+                      ? '树与图 → 程序分析 → 指令'
+                      : '栈与地址 → 指令 → 数据通路'}
+                </span>
+              </>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+    <section class="connections">
+      <div>
+        <p class="eyebrow">03 / CONNECTIONS</p><h2>同一个问题，换个层次理解</h2><p>
+          颜色标识学科，线宽标识关系强度。<br />强联系有明确解释，不以引用次数代替重要性。
+        </p><a href="/graph/?scope=computer">打开可筛选图谱 →</a>
+      </div><ol>
+        <li>
+          <span>01</span><div>
+            <b>一次数组遍历</b><p>
+              <a href="/notes/ds-linear/">线性表</a> → <a href="/notes/co-memory/">缓存局部性</a> → <a
+                href="/notes/os-overview/">虚拟内存</a>
+            </p>
+          </div>
+        </li><li>
+          <span>02</span><div>
+            <b>一次函数调用</b><p>
+              <a href="/notes/ds-stack-queue/">栈与递归</a> → <a href="/notes/assembly/">栈帧</a> → <a
+                href="/notes/co-cpu/">指令执行</a>
+            </p>
+          </div>
+        </li><li>
+          <span>03</span><div>
+            <b>从逻辑门到处理器</b><p>
+              <a href="/notes/digital-logic/">数字逻辑</a> → <a href="/notes/co-arithmetic/"
+                >运算器</a
+              > → <a href="/notes/co-cpu/">控制与流水线</a>
+            </p>
+          </div>
+        </li>
+      </ol>
+    </section>
+    <footer class="study-footer">
+      <p>缺少前置知识？<a href="/notes/cs-prerequisites/">C 语言与离散数学补漏 →</a></p><p>
+        按常见课程体系组织；考试范围请以目标年份官方大纲为准。
+      </p>
+    </footer>
+  </div>
+</BaseLayout>
+<style>
+  .study-page {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+  }
+  .eyebrow {
+    display: flex;
+    gap: 0.7rem;
+    font-size: 0.73rem;
+    letter-spacing: 0.13em;
+    color: var(--color-text-muted);
+    margin: 0 0 0.9rem;
+  }
+  .study-hero {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 3rem;
+    padding: 2.6rem 0 3rem;
+    align-items: center;
+  }
+  h1 {
+    font-size: clamp(2.1rem, 4.6vw, 3.5rem);
+    letter-spacing: -0.035em;
+    line-height: 1.28;
+    margin: 0.8rem 0 1.3rem;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--color-accent);
+  }
+  .intro {
+    color: var(--color-text-secondary);
+    font-size: 1rem;
+    line-height: 1.9;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+    align-items: center;
+    margin-top: 1.6rem;
+    font-size: 0.9rem;
+  }
+  .primary {
+    background: var(--color-accent);
+    color: var(--color-bg);
+    padding: 0.65rem 1.1rem;
+    border-radius: 6px;
+  }
+  .primary:hover {
+    background: var(--color-accent-hover);
+    text-decoration: none;
+  }
+  .study-summary {
+    padding: 2rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    transform: rotate(1deg);
+  }
+  .summary-number {
+    font-size: 3.5rem;
+    line-height: 1.1;
+    font-weight: 650;
+    letter-spacing: -0.06em;
+    color: var(--color-accent);
+  }
+  .summary-number small {
+    font-size: 1.6rem;
+    color: var(--color-text-muted);
+  }
+  .study-summary h2 {
+    font-size: 1.05rem;
+    margin: 1rem 0 0.5rem;
+  }
+  .study-summary p {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+  }
+  .summary-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 1.3rem 0;
+  }
+  .tiny {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+  .section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 1rem;
+    margin: 1.5rem 0 1.2rem;
+  }
+  .section-heading h2 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+  .section-heading .eyebrow {
+    margin-bottom: 0.35rem;
+  }
+  .section-heading > span {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+  .subject-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.1rem;
+  }
+  .subject-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-top: 3px solid var(--subject);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .subject-code {
+    display: inline-flex;
+    border: 1px solid var(--subject);
+    border-left: 5px solid var(--subject);
+    border-radius: 4px;
+    padding: 0.08rem 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .coverage {
+    font-size: 0.73rem;
+    color: var(--color-text-muted);
+    background: var(--color-subtle);
+    padding: 0.12rem 0.5rem;
+    border-radius: 4px;
+  }
+  h3 {
+    font-size: 1.3rem;
+    margin: 1rem 0 0.45rem;
+  }
+  h3 a {
+    color: var(--color-text);
+    display: flex;
+    justify-content: space-between;
+  }
+  h3 span {
+    color: var(--color-text-muted);
+    font-weight: 400;
+  }
+  .subject-card > p {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin: 0 0 1rem;
+  }
+  .chapter-list {
+    padding: 0;
+    margin: 0.2rem 0 1.3rem;
+    list-style: none;
+    counter-reset: chap;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem 1rem;
+  }
+  .chapter-list li {
+    counter-increment: chap;
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.83rem;
+    padding: 0.3rem 0;
+  }
+  .chapter-list li:before {
+    content: counter(chap, decimal-leading-zero);
+    font: 0.72rem var(--font-mono);
+    color: var(--color-text-muted);
+    padding-top: 0.35rem;
+  }
+  .chapter-list a {
+    color: var(--color-text-secondary);
+  }
+  .card-entry {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.8rem;
+    font-size: 0.85rem;
+    margin-top: auto;
+  }
+  .outline-note {
+    font-size: 0.84rem;
+    color: var(--color-text-secondary);
+    padding: 0.2rem 0 1.4rem;
+    line-height: 1.9;
+  }
+  .outline-note span {
+    font-size: 0.77rem;
+    color: var(--color-text-muted);
+  }
+  .branch-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.1rem;
+  }
+  .branch-card {
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-top: 3px solid var(--subject);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 1.4rem;
+    transition: transform 0.2s;
+  }
+  .branch-card:hover {
+    text-decoration: none;
+    transform: translateY(-3px);
+  }
+  .branch-card h3 {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+  }
+  .branch-card p {
+    font-size: 0.83rem;
+    color: var(--color-text-secondary);
+  }
+  .connections {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 2rem;
+    margin-top: 2.5rem;
+    padding: 2rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+  .connections h2 {
+    font-size: 1.35rem;
+  }
+  .connections p {
+    font-size: 0.86rem;
+    color: var(--color-text-secondary);
+  }
+  .connections ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .connections li {
+    display: flex;
+    gap: 1rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .connections li:last-child {
+    border: 0;
+  }
+  .connections li > span {
+    font: 0.75rem var(--font-mono);
+    color: var(--color-text-muted);
+    padding-top: 0.4rem;
+  }
+  .connections li b {
+    font-size: 0.9rem;
+  }
+  .connections li p {
+    margin: 0.3rem 0;
+  }
+  .study-footer {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    padding-top: 1.5rem;
+  }
+  .study-footer p {
+    margin: 0.4rem 0;
+  }
+  @media (max-width: 760px) {
+    .study-hero {
+      grid-template-columns: 1fr;
+      gap: 1.3rem;
+      padding: 1.3rem 0;
+    }
+    .study-summary {
+      transform: none;
+      padding: 1.3rem;
+    }
+    .summary-number {
+      font-size: 2.5rem;
+    }
+    .subject-grid,
+    .branch-grid,
+    .connections {
+      grid-template-columns: 1fr;
+    }
+    .section-heading {
+      align-items: start;
+    }
+    .section-heading > span {
+      max-width: 9rem;
+      text-align: right;
+    }
+    .connections {
+      padding: 1.3rem;
+    }
+    h1 {
+      font-size: 2.35rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .branch-card {
+      transition: none;
+    }
+  }
+</style>

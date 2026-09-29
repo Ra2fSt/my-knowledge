@@ -2,118 +2,67 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import KnowledgeGraph from '../../components/KnowledgeGraph.astro';
 import { getNotes } from '../../lib/notes';
-import { buildGlobalGraph, categoryColor } from '../../lib/graph';
-
+import { buildGlobalGraph } from '../../lib/graph';
 const notes = await getNotes();
 const graph = buildGlobalGraph(notes);
-// 图例：入选节点出现过的分类
-const legend = [...new Set(graph.nodes.map((n) => n.category))];
 ---
 
-<BaseLayout title="知识图谱" description="以节点与连线呈现笔记之间的双链关系">
-  <div class="graph-page">
-    <KnowledgeGraph nodes={graph.nodes} links={graph.links} client:visible />
-
-    <div class="graph-overlay graph-desc">
-      <h1>知识图谱</h1>
-      <p>
-        每个节点是一篇笔记，颜色代表分类，连线代表双链引用。点击节点打开笔记，拖动节点可整理布局，滚轮缩放。
-      </p>
-    </div>
-
+<BaseLayout title="知识图谱" description="用学科颜色与关系线宽探索知识联系。">
+  <div class="container graph-page">
+    <header>
+      <div><p>EXPLORE / 知识之间的联系</p><h1>一张会生长的地图</h1></div><a href="/learn/"
+        >返回学习地图 →</a>
+    </header>
+    <p class="hint">
+      颜色区分学科；细线是引用，较粗的线是支撑或核心联系。悬停连线可读说明，点击节点打开笔记。
+    </p>
     {
-      legend.length > 0 && (
-        <div class="graph-overlay graph-legend">
-          {legend.map((category) => (
-            <span class="legend-item">
-              <span class="legend-dot" style={`background:${categoryColor(category)}`}></span>
-              {category}
-            </span>
-          ))}
-        </div>
+      notes.length > graph.nodes.length && (
+        <p class="hint">
+          当前按连接度展示前 {graph.nodes.length} / {notes.length} 篇笔记。
+        </p>
       )
     }
+    <KnowledgeGraph nodes={graph.nodes} links={graph.links} height={600} controls />
   </div>
 </BaseLayout>
-
 <style>
-  /* 满屏布局：页头与页脚之间的空间全部给图谱，说明与图例悬浮在画布上 */
   .graph-page {
-    position: relative;
-    flex: 1;
-    min-height: 0;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+  header {
     display: flex;
-    flex-direction: column;
-    padding: 1rem 1.5rem 0;
-  }
-
-  /* 本页收紧页脚上边距（覆盖 Footer 的变量），
-     图谱底边与页脚之间留 1rem，与顶边到导航栏的距离对称 */
-  :global(.site-footer) {
-    --footer-margin-top: 1rem;
-  }
-
-  .graph-overlay {
-    position: absolute;
-    bottom: 2rem;
-    z-index: 1;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 0.7rem 1rem;
-    font-size: 0.88rem;
-    color: var(--color-text-secondary);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  }
-
-  .graph-desc {
-    left: 2rem;
-    max-width: 300px;
-  }
-
-  .graph-desc h1 {
-    font-size: 1.1rem;
-    margin: 0 0 0.3rem;
-    color: var(--color-text);
-  }
-
-  .graph-desc p {
-    margin: 0;
-    line-height: 1.6;
-  }
-
-  .graph-legend {
-    right: 2rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem 1rem;
-  }
-
-  .legend-item {
-    display: inline-flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.4rem;
+    gap: 1rem;
+  }
+  header p {
+    font-size: 0.73rem;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+  h1 {
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    margin: 0.4rem 0;
+  }
+  header > a {
+    font-size: 0.85rem;
     white-space: nowrap;
   }
-
-  .legend-dot {
-    width: 0.7rem;
-    height: 0.7rem;
-    border-radius: 50%;
+  .hint {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin: 0.7rem 0 1.3rem;
   }
-
-  @media (max-width: 768px) {
-    .graph-desc {
-      max-width: 55%;
-      left: 1.25rem;
+  @media (max-width: 600px) {
+    header {
+      align-items: start;
     }
-
-    /* 窄屏下 55% + 45% 并排放不下会重叠，图例改到画布右上角 */
-    .graph-legend {
-      max-width: 55%;
-      right: 1.25rem;
-      bottom: auto;
-      top: 1rem;
+    header > a {
+      font-size: 0.75rem;
+      white-space: normal;
     }
   }
 </style>

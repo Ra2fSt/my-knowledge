@@ -136,3 +136,14 @@ const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
   - token 权限(https://dash.cloudflare.com/profile/api-tokens):Workers 部署要「账户 → Workers Scripts → 编辑」,Pages 部署要「账户 → Cloudflare Pages → 编辑」。
   - `not_found_handling: "404-page"` 才会让缺失路径返回 404.html;`wrangler pages deploy` 不会自动创建项目(先 `wrangler pages project create`)。
 - **验证注意**:workers.dev / pages.dev 共享域名国内直连超时属正常,不代表部署失败;验证线上站点可走本地代理。国内正式使用需绑定自有域名并同步更新 `PUBLIC_SITE_URL`。
+
+
+## 13. 2026-09-29：图谱与内容结构重构
+
+- Astro 组件上的 client:visible 不会按预期水合；本轮改用 IntersectionObserver 触发动态 import，JSON 数据脚本显式加 is:inline。
+- force-graph 会把 links 的 source/target 改为节点对象。筛选必须从未变异的原始数据重新复制节点/边，并兼容字符串/对象端点，不能反复过滤同一份变异数据。
+- 同一对节点的两个方向不能重复画线，否则线宽不再可靠；现在合并线宽取最大值、文字保留两边的关系说明。
+- 单科筛选后使用可见节点数量决定是否显示标题，图例随可见分类收缩。
+- 新笔记正文用 [[id|中文显示名]]，避免可读页面出现英文文件名；双链插件仍只扫描 notes 顶层，层级使用 parent 而非迁移物理目录。
+
+- GFM 表格会先把未转义的别名分隔符 `|` 拆列。新表格统一使用 `[[完整中文标题]]`，正文段落保留别名；验证构建后的 note-content 不残留双中括号，防止构建成功但表格链接失效。

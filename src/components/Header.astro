@@ -4,6 +4,7 @@ import { SITE_TITLE } from '../consts';
 
 const navItems = [
   { href: '/', label: '首页' },
+  { href: '/learn/', label: '计算机基础' },
   { href: '/notes/', label: '笔记' },
   { href: '/categories/', label: '分类' },
   { href: '/tags/', label: '标签' },
@@ -36,7 +37,14 @@ function isActive(href: string): boolean {
 
     <div class="header-actions">
       <button class="icon-button search-button" type="button" aria-label="搜索">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
           <circle cx="11" cy="11" r="7"></circle>
           <path d="m20 20-3.8-3.8"></path>
         </svg>
@@ -47,7 +55,14 @@ function isActive(href: string): boolean {
 
     <details class="mobile-menu">
       <summary class="icon-button" aria-label="打开菜单">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
           <path d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
       </summary>
@@ -156,7 +171,7 @@ function isActive(href: string): boolean {
     text-decoration: none;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1000px) {
     .site-nav {
       display: none;
     }

@@ -1,141 +1,108 @@
-// 知识图谱数据层
-//   buildGlobalGraph：全局图谱，按「连接度（出链+回链）」取前 maxNodes 篇
-//   buildLocalGraph：单篇笔记的局部图谱（本篇 + 直链出去 + 反向链接进来，一跳邻居）
-// 只被页面使用（不进 remark 插件链），可以正常导入 wikilinks 工具。
 import type { NoteEntry } from './notes';
-import { noteUpdatedAt } from './notes';
 import { UNCATEGORIZED } from '../consts';
-import { buildTitleIndex, getOutboundNotes, getBacklinks } from './wikilinks';
-
+import { buildTitleIndex, extractWikilinkTargets } from './wikilinks';
+import { categoryColor, RELATION_LABELS } from './subjects';
+export { categoryColor } from './subjects';
 export interface GraphNode {
   id: string;
   name: string;
   category: string;
   color: string;
-  val: number; // 节点大小 = 1 + 连接度
+  val: number;
   url: string;
+  kind: string;
+  section?: string;
 }
-
 export interface GraphLink {
   source: string;
   target: string;
+  strength: number;
+  descriptions: string[];
 }
-
 export interface GraphData {
   nodes: GraphNode[];
   links: GraphLink[];
 }
 
-// 分类调色板：中饱和度，深浅主题下都可读。按分类名哈希取色，全站一致。
-const PALETTE = [
-  '#4f8ee8', '#e05d8f', '#3fa97c', '#d99a2b', '#8a63d8',
-  '#d4654a', '#3fa8c9', '#9aa24a', '#c46fc4', '#5a9e5e',
-];
-
-export function categoryColor(category: string): string {
-  let hash = 0;
-  for (let i = 0; i < category.length; i++) {
-    hash = (hash * 31 + category.charCodeAt(i)) >>> 0;
+// 一对节点只画一条线，粗细取显式关系的最大强度，保留每个方向的文字说明。
+export function buildEdges(notes: NoteEntry[]): GraphLink[] {
+  const index = buildTitleIndex(notes);
+  const byId = new Map(notes.map((n) => [n.id, n]));
+  const edges = new Map<string, GraphLink>();
+  function add(source: string, target: string, strength: number, description: string) {
+    if (source === target || !byId.has(source) || !byId.has(target)) return;
+    const [a, b] = [source, target].sort();
+    const key = JSON.stringify([a, b]);
+    const edge = edges.get(key) ?? { source: a, target: b, strength: 1, descriptions: [] };
+    edge.strength = Math.max(edge.strength, strength);
+    if (!edge.descriptions.includes(description)) edge.descriptions.push(description);
+    edges.set(key, edge);
   }
-  return PALETTE[hash % PALETTE.length];
+  for (const n of notes) {
+    for (const name of extractWikilinkTargets(n.body ?? '')) {
+      const target = index.get(name);
+      if (target) add(n.id, target.id, 1, n.data.title + ' → 引用 → ' + target.data.title);
+    }
+    if (n.data.parent) {
+      const parent = byId.get(n.data.parent);
+      if (parent) add(parent.id, n.id, 3, parent.data.title + ' → 包含章节 → ' + n.data.title);
+    }
+    for (const r of n.data.relations ?? []) {
+      const target = byId.get(r.target);
+      if (target)
+        add(
+          n.id,
+          target.id,
+          r.strength,
+          n.data.title +
+            ' → ' +
+            RELATION_LABELS[r.type] +
+            ' → ' +
+            target.data.title +
+            '：' +
+            r.reason,
+        );
+    }
+  }
+  return [...edges.values()];
 }
-
-function categoryOf(note: NoteEntry): string {
-  return note.data.category ?? UNCATEGORIZED;
-}
-
-function toNode(note: NoteEntry, degree: number): GraphNode {
-  const category = categoryOf(note);
+function assemble(notes: NoteEntry[], links: GraphLink[]): GraphData {
+  const ids = new Set(notes.map((n) => n.id));
+  const selectedLinks = links.filter((l) => ids.has(l.source) && ids.has(l.target));
   return {
-    id: note.id,
-    name: note.data.title,
-    category,
-    color: categoryColor(category),
-    val: 1 + degree,
-    url: `/notes/${note.id}/`,
+    nodes: notes.map((n) => {
+      const category = n.data.category ?? UNCATEGORIZED;
+      return {
+        id: n.id,
+        name: n.data.title,
+        category,
+        color: categoryColor(category),
+        val: 1 + selectedLinks.filter((l) => l.source === n.id || l.target === n.id).length,
+        url: '/notes/' + n.id + '/',
+        kind: n.data.kind,
+        section: n.data.section,
+      };
+    }),
+    links: selectedLinks,
   };
 }
-
-// 出链邻接表：id → 直链目标 id 集合
-function buildAdjacency(
-  notes: NoteEntry[],
-  index: Map<string, NoteEntry>
-): Map<string, Set<string>> {
-  const adj = new Map<string, Set<string>>();
-  for (const note of notes) {
-    adj.set(note.id, new Set(getOutboundNotes(note, index).map((n) => n.id)));
-  }
-  return adj;
-}
-
 export function buildGlobalGraph(notes: NoteEntry[], maxNodes = 200): GraphData {
-  const index = buildTitleIndex(notes);
-  const adj = buildAdjacency(notes, index);
-
-  // 连接度 = 出链 + 回链
-  const degree = new Map<string, number>();
-  for (const note of notes) {
-    let d = adj.get(note.id)?.size ?? 0;
-    for (const [from, targets] of adj) {
-      if (from !== note.id && targets.has(note.id)) d++;
-    }
-    degree.set(note.id, d);
-  }
-
+  const links = buildEdges(notes);
+  const degree = (id: string) => links.filter((l) => l.source === id || l.target === id).length;
   const selected = [...notes]
-    .sort(
-      (a, b) =>
-        (degree.get(b.id) ?? 0) - (degree.get(a.id) ?? 0) ||
-        noteUpdatedAt(b).getTime() - noteUpdatedAt(a).getTime()
-    )
+    .sort((a, b) => degree(b.id) - degree(a.id) || a.id.localeCompare(b.id))
     .slice(0, maxNodes);
-
-  const selectedIds = new Set(selected.map((n) => n.id));
-  const nodes = selected.map((n) => toNode(n, degree.get(n.id) ?? 0));
-  const links: GraphLink[] = [];
-  for (const [from, targets] of adj) {
-    if (!selectedIds.has(from)) continue;
-    for (const to of targets) {
-      if (selectedIds.has(to)) links.push({ source: from, target: to });
-    }
-  }
-  return { nodes, links };
+  return assemble(selected, links);
 }
-
-export function buildLocalGraph(
-  note: NoteEntry,
-  notes: NoteEntry[],
-  maxNodes = 60
-): GraphData {
-  const index = buildTitleIndex(notes);
-  const outbound = getOutboundNotes(note, index);
-  const backlinks = getBacklinks(note, notes, index);
-
-  // 本篇排最前（图谱里的中心节点），其余按原顺序去重
-  const others = [...outbound, ...backlinks].filter((n) => n.id !== note.id);
-  const seen = new Set<string>([note.id]);
-  const members = [note, ...others.filter((n) => !seen.has(n.id) && seen.add(n.id))].slice(
-    0,
-    maxNodes
+export function buildLocalGraph(note: NoteEntry, notes: NoteEntry[], maxNodes = 60): GraphData {
+  const links = buildEdges(notes);
+  const neighbors = new Set(
+    links
+      .filter((l) => l.source === note.id || l.target === note.id)
+      .flatMap((l) => [l.source, l.target]),
   );
-  const memberSet = new Set(members.map((n) => n.id));
-
-  // 连接度只在一跳子图内计算
-  const degree = new Map<string, number>();
-  for (const n of members) {
-    const out = getOutboundNotes(n, index).filter((t) => memberSet.has(t.id)).length;
-    const back = getBacklinks(n, notes, index).filter((t) => memberSet.has(t.id)).length;
-    degree.set(n.id, out + back);
-  }
-
-  const nodes = members.map((n) => toNode(n, degree.get(n.id) ?? 0));
-  const links: GraphLink[] = [];
-  for (const n of members) {
-    for (const t of getOutboundNotes(n, index)) {
-      if (t.id !== n.id && memberSet.has(t.id)) {
-        links.push({ source: n.id, target: t.id });
-      }
-    }
-  }
-  return { nodes, links };
+  return assemble(
+    [note, ...notes.filter((n) => n.id !== note.id && neighbors.has(n.id))].slice(0, maxNodes),
+    links,
+  );
 }

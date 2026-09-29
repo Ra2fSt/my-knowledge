@@ -132,6 +132,7 @@ hr {
 
 /* 布局容器 */
 .container {
+  width: 100%;
   max-width: var(--content-width);
   margin: 0 auto;
   padding: 0 1.5rem;
@@ -160,4 +161,32 @@ hr {
 .icon-button svg {
   width: 16px;
   height: 16px;
+}
+
+/* 阅读节奏与小屏长内容 */
+.note-content {
+  line-height: 1.95;
+  overflow-wrap: anywhere;
+}
+.note-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.note-content th {
+  white-space: nowrap;
+}
+.note-content td {
+  min-width: 8em;
+}
+.note-content li + li {
+  margin-top: 0.3em;
+}
+.note-content input[type='checkbox'] {
+  accent-color: var(--color-accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
