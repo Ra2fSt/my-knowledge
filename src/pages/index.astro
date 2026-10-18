@@ -13,276 +13,615 @@ const categories = [...getCategoryCounts(notes).entries()];
 const tags = [...getTagCounts(notes).entries()];
 const topTags = tags.slice(0, 15);
 const latest = notes.length > 0 ? formatDate(noteUpdatedAt(notes[0])) : '—';
+// 首页导语在冒号处断行，避免中文词被拆开
+const [leadFirst, ...leadRest] = SITE_DESCRIPTION.split('：');
+const leadFirstLine = leadRest.length > 0 ? leadFirst + '：' : leadFirst;
+const leadSecondLine = leadRest.join('：');
 ---
 
 <BaseLayout>
   <section class="hero">
-    <p class="home-eyebrow">DIGITAL GARDEN / 持续生长的知识</p>
-    <h1>{SITE_TITLE}</h1>
-    <p class="lead">{SITE_DESCRIPTION}</p>
-    <p class="stats">
-      共 {notes.length} 篇笔记 · {categories.length} 个分类 · {tags.length} 个标签 · 最近更新 {
-        latest
-      }
-    </p>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">
+          <span class="eyebrow-mark" aria-hidden="true"></span>
+          DIGITAL GARDEN / 持续生长的知识
+        </p>
+        <h1>{SITE_TITLE}</h1>
+        <p class="lead">
+          {leadFirstLine}
+          {
+            leadSecondLine && (
+              <>
+                <br />
+                {leadSecondLine}
+              </>
+            )
+          }
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/learn/">
+            进入学习地图 <span aria-hidden="true">↗</span>
+          </a>
+          <a class="text-link" href="/notes/">浏览全部笔记 →</a>
+        </div>
+        <dl class="hero-stats">
+          <div>
+            <dt>笔记</dt>
+            <dd>{notes.length}</dd>
+          </div>
+          <div>
+            <dt>分类</dt>
+            <dd>{categories.length}</dd>
+          </div>
+          <div>
+            <dt>标签</dt>
+            <dd>{tags.length}</dd>
+          </div>
+          <div class="stat-wide">
+            <dt>最近更新</dt>
+            <dd>{latest}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <figure class="color-plate" aria-labelledby="plate-caption">
+        <div class="plate-bands" aria-hidden="true">
+          <span class="band band-sky"></span>
+          <span class="band band-cloud"></span>
+          <span class="band band-grass"></span>
+          <span class="band band-sun"></span>
+          <span class="band band-violet"></span>
+          <span class="plate-disc"></span>
+        </div>
+        <figcaption id="plate-caption">
+          <span class="plate-kicker">ÉTUDE DE COULEUR / 1875</span>
+          <span class="plate-title">天空、草坡与阳伞的阴影</span>
+          <span class="plate-source">after Claude Monet, Femme à l'ombrelle</span>
+          <span class="plate-legend" aria-hidden="true">
+            <span><i class="l-sky"></i>天空</span>
+            <span><i class="l-cloud"></i>云</span>
+            <span><i class="l-grass"></i>草坡</span>
+            <span><i class="l-sun"></i>阳光</span>
+            <span><i class="l-violet"></i>阴影</span>
+          </span>
+        </figcaption>
+      </figure>
+    </div>
   </section>
 
   <section class="container learning-entry" aria-labelledby="learning-title">
     <div class="learning-card">
-      <div>
-        <p class="home-eyebrow">新的大章节 / COMPUTER SCIENCE</p><h2 id="learning-title">
-          计算机基础，开始连成一张网。
-        </h2><p>
-          408 四科主干 + 数电、编译、汇编旁支。<br />先看计组与数据结构总览，再沿知识联系向下探索。
-        </p><div class="learning-actions">
-          <a href="/learn/">进入学习地图 ↗</a><a href="/graph/?scope=computer">查看关系图谱 →</a>
+      <div class="learning-copy">
+        <p class="eyebrow">新的大章节 / COMPUTER SCIENCE</p>
+        <h2 id="learning-title">计算机基础，开始连成一张网。</h2>
+        <p>
+          408 四科主干 + 数电、编译、汇编旁支。<br />
+          先看计组与数据结构总览，再沿知识联系向下探索。
+        </p>
+        <div class="learning-actions">
+          <a href="/learn/">进入学习地图 ↗</a>
+          <a href="/graph/?scope=computer">查看关系图谱 →</a>
         </div>
-      </div><div class="subject-shortcuts">
+      </div>
+      <div class="subject-shortcuts">
         {
           SUBJECTS.map((subject) => (
             <a href={'/notes/' + subject.id + '/'} style={'--subject:' + subject.color}>
-              <span>{subject.code}</span>
-              {subject.name}
-              <span aria-hidden="true">↗</span>
+              <span class="subject-code">{subject.code}</span>
+              <span class="subject-name">{subject.name}</span>
+              <span class="subject-arrow" aria-hidden="true">
+                ↗
+              </span>
             </a>
           ))
         }
       </div>
     </div>
   </section>
+
   <div class="container home-grid">
-    <section class="panel">
-      <h2>最近更新</h2>
+    <section class="recent" aria-labelledby="recent-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">01 / RECENT</p>
+          <h2 id="recent-title">最近更新</h2>
+        </div>
+        <a class="text-link" href="/notes/">全部笔记 →</a>
+      </div>
       {
         recent.length > 0 ? (
-          <div>
-            {recent.map((note) => (
-              <NoteCard note={note} />
+          <div class="note-list">
+            {recent.map((note, index) => (
+              <NoteCard note={note} index={index + 1} />
             ))}
           </div>
         ) : (
           <p class="empty">暂无笔记</p>
         )
       }
-      <p class="panel-more"><a href="/notes/">查看全部笔记 →</a></p>
     </section>
 
-    <section class="panel">
-      <h2>分类</h2>
-      {
-        categories.length > 0 ? (
-          <ul class="chip-list">
-            {categories.map(([category, count]) => (
-              <li>
-                <a href={`/categories/${encodeURIComponent(category)}/`}>
-                  {category}
-                  <span class="count">{count}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p class="empty">暂无分类</p>
-        )
-      }
-    </section>
+    <aside class="home-aside">
+      <section class="aside-block" aria-labelledby="categories-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">02 / INDEX</p>
+            <h2 id="categories-title">分类</h2>
+          </div>
+        </div>
+        {
+          categories.length > 0 ? (
+            <ul class="index-list">
+              {categories.map(([category, count]) => (
+                <li>
+                  <a href={`/categories/${encodeURIComponent(category)}/`}>
+                    <span>{category}</span>
+                    <span class="count">{count}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="empty">暂无分类</p>
+          )
+        }
+      </section>
 
-    <section class="panel">
-      <h2>热门标签</h2>
-      {
-        topTags.length > 0 ? (
-          <ul class="chip-list">
-            {topTags.map(([tag, count]) => (
-              <li>
-                <a href={`/tags/${encodeURIComponent(tag)}/`}>
-                  #{tag}
-                  <span class="count">{count}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p class="empty">暂无标签</p>
-        )
-      }
-    </section>
+      <section class="aside-block" aria-labelledby="tags-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">03 / TAGS</p>
+            <h2 id="tags-title">热门标签</h2>
+          </div>
+        </div>
+        {
+          topTags.length > 0 ? (
+            <ul class="tag-index">
+              {topTags.map(([tag, count]) => (
+                <li>
+                  <a href={`/tags/${encodeURIComponent(tag)}/`}>
+                    #{tag}
+                    <span class="count">{count}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="empty">暂无标签</p>
+          )
+        }
+      </section>
+    </aside>
   </div>
 </BaseLayout>
 
 <style>
   .hero {
-    padding: 4rem 1.5rem 2.5rem;
-    text-align: center;
+    padding: clamp(3rem, 7vw, 6rem) 0 clamp(2.5rem, 5vw, 4.5rem);
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.8fr);
+    align-items: center;
+    gap: clamp(2.5rem, 6vw, 6rem);
+  }
+
+  .eyebrow-mark {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: var(--color-sun);
   }
 
   .hero h1 {
-    margin: 0 0 0.75rem;
-    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin: 0.8rem 0 1.2rem;
+    font-size: clamp(2.7rem, 6vw, 4.8rem);
+    line-height: 1.08;
   }
 
   .lead {
-    margin: 0 auto;
-    max-width: 42ch;
+    max-width: none;
+    margin: 0;
     color: var(--color-text-secondary);
-    font-size: 1.05rem;
+    font-size: 1.02rem;
+    line-height: 1.9;
+    text-wrap: pretty;
   }
 
-  .stats {
-    margin: 1rem 0 0;
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 2.7rem 0 0;
+    padding: 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .hero-stats > div {
+    padding: 1rem 1rem 0 0;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .hero-stats > div:last-child {
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .hero-stats dt {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
     color: var(--color-text-muted);
+  }
+
+  .hero-stats dd {
+    margin: 0.2rem 0 0;
+    font-family: var(--font-display);
+    font-size: 1.55rem;
+    line-height: 1.2;
+  }
+
+  .hero-stats .stat-wide dd {
+    padding-top: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* 调色板习作：五块画面颜色 + 一个阳伞/太阳的圆 */
+  .color-plate {
+    --plate-sky: #cfe0e6;
+    --plate-cloud: #f5f0e2;
+    --plate-grass: #7f9570;
+    --plate-sun: #c9a55f;
+    --plate-violet: #7e7898;
+    margin: 0;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+  }
+
+  .plate-bands {
+    position: relative;
+    display: flex;
+    aspect-ratio: 4 / 3.35;
+    overflow: hidden;
+  }
+
+  .plate-bands::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 61%;
+    z-index: 2;
+    height: 1px;
+    background: rgba(250, 247, 236, 0.55);
+  }
+
+  .plate-bands::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(
+        104deg,
+        rgba(255, 255, 255, 0.11) 0 1px,
+        transparent 1px 6px
+      ),
+      repeating-linear-gradient(14deg, rgba(34, 51, 61, 0.045) 0 1px, transparent 1px 9px);
+    mix-blend-mode: soft-light;
+  }
+
+  .band {
+    display: block;
+    height: 100%;
+  }
+
+  .band-sky {
+    flex: 1.15;
+    background: var(--plate-sky);
+  }
+
+  .band-cloud {
+    flex: 0.92;
+    background: var(--plate-cloud);
+  }
+
+  .band-grass {
+    flex: 1.38;
+    background: var(--plate-grass);
+  }
+
+  .band-sun {
+    flex: 0.6;
+    background: var(--plate-sun);
+  }
+
+  .band-violet {
+    flex: 0.88;
+    background: var(--plate-violet);
+  }
+
+  .plate-disc {
+    position: absolute;
+    z-index: 1;
+    top: 8%;
+    left: 33%;
+    width: 38%;
+    aspect-ratio: 1;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    border: 1px solid rgba(250, 247, 236, 0.55);
+    background: radial-gradient(
+      circle at 38% 32%,
+      rgba(250, 247, 236, 0.92),
+      rgba(250, 247, 236, 0.26) 58%,
+      rgba(250, 247, 236, 0.04) 70%,
+      transparent 72%
+    );
+  }
+
+  .color-plate figcaption {
+    display: flex;
+    flex-direction: column;
+    gap: 0.22rem;
+    padding: 0.85rem 1rem 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .plate-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    letter-spacing: 0.16em;
+    color: var(--color-text-muted);
+  }
+
+  .plate-title {
+    font-family: var(--font-display);
+    font-size: 0.98rem;
+    line-height: 1.45;
+  }
+
+  .plate-source {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-text-muted);
+  }
+
+  .plate-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.85rem;
+    margin-top: 0.55rem;
+    padding-top: 0.6rem;
+    border-top: 1px dotted var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.03em;
+    color: var(--color-text-muted);
+  }
+
+  .plate-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .plate-legend i {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+  }
+
+  .l-sky {
+    background: var(--plate-sky);
+  }
+
+  .l-cloud {
+    background: var(--plate-cloud);
+    border: 1px solid var(--color-border);
+  }
+
+  .l-grass {
+    background: var(--plate-grass);
+  }
+
+  .l-sun {
+    background: var(--plate-sun);
+  }
+
+  .l-violet {
+    background: var(--plate-violet);
+  }
+
+  .learning-entry {
+    margin-bottom: 3.5rem;
+  }
+
+  .learning-card {
+    display: grid;
+    grid-template-columns: 1.25fr 0.9fr;
+    border: 1px solid var(--color-border);
+    border-top: 3px solid var(--color-grass);
+    background: var(--color-surface);
+  }
+
+  .learning-copy {
+    padding: clamp(1.5rem, 3vw, 2.4rem);
+  }
+
+  .learning-copy h2 {
+    margin: 0.45rem 0 0.9rem;
+    font-size: clamp(1.45rem, 2.8vw, 1.9rem);
+    line-height: 1.4;
+    text-wrap: balance;
+  }
+
+  .learning-copy p:not(.eyebrow) {
+    margin: 0;
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
+    line-height: 1.85;
+  }
+
+  .learning-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+    margin-top: 1.4rem;
+    font-size: 0.85rem;
+  }
+
+  .learning-actions a:first-child {
+    font-weight: 600;
+  }
+
+  .subject-shortcuts {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(1.2rem, 2.5vw, 2rem);
+    border-left: 1px solid var(--color-border);
+    background: var(--color-sky-soft);
+  }
+
+  .subject-shortcuts a {
+    display: grid;
+    grid-template-columns: 2.3rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0.2rem 0.55rem 0.7rem;
+    border-top: 1px solid var(--color-border);
+    border-left: 3px solid var(--subject);
+    color: var(--color-text);
+    font-size: 0.86rem;
+    text-decoration: none;
+  }
+
+  .subject-shortcuts a:first-child {
+    border-top: 0;
+  }
+
+  .subject-shortcuts a:hover {
+    background: var(--color-surface);
+    color: var(--color-accent);
+  }
+
+  .subject-code {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+  }
+
+  .subject-arrow {
+    color: var(--color-text-muted);
   }
 
   .home-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1.8fr) minmax(16.5rem, 0.85fr);
+    gap: 0;
     padding-bottom: 4rem;
+    border-top: 1px solid var(--color-border);
   }
 
-  .panel {
-    padding: 1.5rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+  .recent {
+    padding: 2.2rem 3rem 0 0;
   }
 
-  .panel:first-child {
-    grid-row: span 2;
+  .home-aside {
+    padding: 2.2rem 0 0 2.8rem;
+    border-left: 1px solid var(--color-border);
   }
 
-  .panel h2 {
-    margin: 0 0 1rem;
-    font-size: 1.05rem;
+  .aside-block + .aside-block {
+    margin-top: 2.4rem;
   }
 
-  .panel-more {
-    margin: 1rem 0 0;
-    font-size: 0.9rem;
+  .home-aside .section-head {
+    padding-bottom: 0.6rem;
   }
 
-  .empty {
-    margin: 0;
-    padding: 2rem 1rem;
-    text-align: center;
-    color: var(--color-text-muted);
-    border: 1px dashed var(--color-border);
-    border-radius: var(--radius);
+  .home-aside .section-head h2 {
+    font-size: 1.15rem;
   }
 
-  .chip-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+  .home-aside .eyebrow {
+    font-size: 0.58rem;
   }
 
-  .chip-list a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.3rem 0.7rem;
-    background: var(--color-subtle);
-    border-radius: 999px;
-    font-size: 0.85rem;
-    color: var(--color-text-secondary);
-  }
+  @media (max-width: 980px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 2.8rem;
+    }
 
-  .chip-list a:hover {
-    color: var(--color-accent);
-    background: var(--color-accent-soft);
-    text-decoration: none;
-  }
+    .color-plate {
+      width: min(34rem, 100%);
+    }
 
-  .count {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-  }
+    .learning-card {
+      grid-template-columns: 1fr;
+    }
 
-  @media (max-width: 768px) {
+    .subject-shortcuts {
+      border-top: 1px solid var(--color-border);
+      border-left: 0;
+    }
+
     .home-grid {
       grid-template-columns: 1fr;
     }
 
-    .panel:first-child {
-      grid-row: auto;
+    .recent {
+      padding-right: 0;
     }
-  }
-</style>
 
-<style>
-  .home-eyebrow {
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
-    color: var(--color-text-muted);
-    margin: 0 0 1rem;
-  }
-  .learning-entry {
-    margin-bottom: 1.8rem;
-  }
-  .learning-card {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 2rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    border-top: 3px solid var(--color-accent);
-  }
-  .learning-card h2 {
-    font-size: 1.65rem;
-    margin: 0.5rem 0 1rem;
-  }
-  .learning-card p:not(.home-eyebrow) {
-    font-size: 0.93rem;
-    color: var(--color-text-secondary);
-  }
-  .learning-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.2rem;
-    font-size: 0.9rem;
-    margin-top: 1.3rem;
-  }
-  .learning-actions a:first-child {
-    font-weight: 700;
-  }
-  .subject-shortcuts {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.4rem;
-  }
-  .subject-shortcuts a {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    padding: 0.4rem 0.7rem;
-    border-left: 3px solid var(--subject);
-    background: var(--color-bg);
-    color: var(--color-text);
-    font-size: 0.85rem;
-    border-radius: 0 4px 4px 0;
-  }
-  .subject-shortcuts span:first-child {
-    font: 0.7rem var(--font-mono);
-    width: 2.4rem;
-    color: var(--color-text-muted);
-  }
-  .subject-shortcuts span:last-child {
-    margin-left: auto;
-    color: var(--color-text-muted);
-  }
-  @media (max-width: 760px) {
-    .learning-card {
-      grid-template-columns: 1fr;
-      padding: 1.3rem;
-      gap: 1.3rem;
-    }
-    .learning-card h2 {
-      font-size: 1.35rem;
+    .home-aside {
+      margin-top: 2.6rem;
+      padding: 2rem 0 0;
+      border-top: 1px solid var(--color-border);
+      border-left: 0;
     }
   }
+
+  @media (max-width: 700px) {
+    .hero-stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hero-stats > div:nth-child(2n) {
+      padding-right: 0;
+      border-right: 0;
+    }
+
+    .hero-stats > div:nth-child(n + 3) {
+      margin-top: 0.9rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 12vw, 3.6rem);
+    }
+
+    .lead {
+      max-width: none;
+    }
+
+    .learning-actions {
+      gap: 1rem;
+    }
 </style>

@@ -7,79 +7,109 @@ const categories = [...getCategoryCounts(notes).entries()];
 ---
 
 <BaseLayout title="分类">
-  <div class="container list-page">
-    <header class="list-header">
+  <div class="container page-shell">
+    <header class="page-head">
+      <p class="eyebrow">INDEX / 分类</p>
       <h1>分类</h1>
-      <p>共 {categories.length} 个分类</p>
+      <p>共 {categories.length} 个分类 · 按笔记数量排列</p>
     </header>
 
     <ul class="cat-list">
-      {categories.map(([category, count]) => (
-        <li>
-          <a href={`/categories/${encodeURIComponent(category)}/`}>
-            <span class="cat-name">{category}</span>
-            <span class="count">{count} 篇</span>
-            <span class="arrow">→</span>
-          </a>
-        </li>
-      ))}
+      {
+        categories.map(([category, count], index) => (
+          <li>
+            <a href={`/categories/${encodeURIComponent(category)}/`}>
+              <span class="cat-index" aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span class="cat-name">{category}</span>
+              <span class="cat-leader" aria-hidden="true"></span>
+              <span class="cat-count">{count} 篇</span>
+              <span class="cat-arrow" aria-hidden="true">
+                →
+              </span>
+            </a>
+          </li>
+        ))
+      }
     </ul>
   </div>
 </BaseLayout>
 
 <style>
-  .list-page {
-    max-width: var(--article-width);
-    margin-inline: auto;
-    padding-top: 2.5rem;
-    padding-bottom: 3rem;
-  }
-
-  .list-header h1 {
-    margin: 0 0 0.4rem;
-  }
-
-  .list-header p {
-    margin: 0 0 1.5rem;
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
-  }
-
   .cat-list {
-    list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    list-style: none;
+  }
+
+  .cat-list li {
+    border-top: 1px solid var(--color-border);
   }
 
   .cat-list a {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
+    display: grid;
+    grid-template-columns: 2.4rem auto minmax(2rem, 1fr) auto auto;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 1.1rem 0.3rem;
     color: var(--color-text);
-    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.18s ease;
   }
 
   .cat-list a:hover {
-    border-color: var(--color-accent);
+    background: var(--color-sky-soft);
     color: var(--color-accent);
-    text-decoration: none;
   }
 
-  .count {
+  .cat-index {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
     color: var(--color-text-muted);
-    font-size: 0.85rem;
-    font-weight: 400;
   }
 
-  .arrow {
-    margin-left: auto;
+  .cat-name {
+    font-family: var(--font-display);
+    font-size: 1.18rem;
+    letter-spacing: -0.01em;
+  }
+
+  .cat-leader {
+    align-self: center;
+    border-bottom: 1px dotted var(--color-border-strong);
+    transform: translateY(-0.1em);
+  }
+
+  .cat-count {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.03em;
     color: var(--color-text-muted);
+  }
+
+  .cat-arrow {
+    color: var(--color-text-muted);
+  }
+
+  @media (max-width: 560px) {
+    .cat-list a {
+      grid-template-columns: 1.8rem auto 1fr auto;
+      gap: 0.7rem;
+      padding: 0.9rem 0.15rem;
+    }
+
+    .cat-leader {
+      display: none;
+    }
+
+    .cat-arrow {
+      display: none;
+    }
+
+    .cat-name {
+      font-size: 1.05rem;
+    }
   }
 </style>

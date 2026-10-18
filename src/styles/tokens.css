@@ -1,6 +1,9 @@
 /* ============================================
    设计变量（Design Tokens）
-   亮色：米色纸张感；暗色：深紫藏青的夜空感。
+   配色取自莫奈《撑阳伞的女人》（1875）：
+   天空的灰蓝、云的白、草坡的青绿、阳光的麦金、
+   以及裙摆与草地里的紫灰阴影。
+   亮色是正午的草地，暗色是暮色中的同一片天空。
    系统主题跟随通过 @media 实现，
    用户手动选择通过 html[data-theme] 覆盖。
    ============================================ */
@@ -8,44 +11,67 @@
 :root {
   color-scheme: light;
 
-  /* 背景与表面 */
-  --color-bg: #f5efe2;
-  --color-surface: #fdfbf5;
-  --color-subtle: #ede5d3;
+  /* 画布与纸张 */
+  --color-bg: #f3efe2;
+  --color-surface: #faf7ec;
+  --color-subtle: #eae5d7;
+  --color-code-bg: #eae5d7;
 
-  /* 文字（muted 在纸面/面板/浅灰三种背景上均 ≥4.5:1 对比度） */
-  --color-text: #2b2721;
-  --color-text-secondary: #5f5a4e;
-  --color-text-muted: #6b6455;
+  /* 文字：在纸张 / 面板 / 天空色底上均保持可读性 */
+  --color-text: #22333d;
+  --color-text-secondary: #4e6068;
+  --color-text-muted: #5a6c73;
+  --color-ink: #22333d;
 
-  /* 边框 */
-  --color-border: #e2d9c3;
+  /* 线条：细线负责分隔，粗线只用于结构强调 */
+  --color-border: #d8d2bf;
+  --color-border-strong: #b9b29d;
 
-  /* 主色（链接、强调）：accent 在纸面上 ≥4.5:1，hover 更深一档保持悬停区分度 */
-  --color-accent: #2a7354;
-  --color-accent-hover: #1e5a3e;
-  --color-accent-soft: rgba(42, 115, 84, 0.1);
+  /* 主色：天空的钴蓝 */
+  --color-accent: #35658c;
+  --color-accent-hover: #284f6f;
+  --color-accent-soft: rgba(53, 101, 140, 0.08);
 
-  /* 代码块 */
-  --color-code-bg: #ede5d3;
+  /* 画面里的五块颜色 */
+  --color-sky: #cfe0e6;
+  --color-sky-soft: #e7eef0;
+  --color-cloud: #faf7ec;
+  --color-grass: #7f9570;
+  --color-grass-soft: #e3e8d8;
+  --color-sun: #c9a55f;
+  --color-sun-soft: #f0e5c9;
+  --color-violet: #7e7898;
+  --color-violet-soft: #e6e2ec;
 
   /* 笔记状态色 */
-  --color-learning: #b45309;
-  --color-organizing: #1d4ed8;
-  --color-mastered: #15803d;
-  --color-archived: #6b7280;
+  --color-learning: #8a571f;
+  --color-organizing: #35658c;
+  --color-mastered: #3f6a4d;
+  --color-archived: #596a70;
 
-  /* 布局与圆角 */
-  --radius: 8px;
-  --radius-lg: 12px;
-  --content-width: 1100px;
-  --article-width: 72ch;
+  /* 图谱 */
+  --color-graph-link-1: rgba(34, 51, 61, 0.14);
+  --color-graph-link-2: rgba(34, 51, 61, 0.27);
+  --color-graph-link-3: rgba(34, 51, 61, 0.44);
+  --color-graph-link-dim: rgba(34, 51, 61, 0.05);
+
+  /* 浮层与阴影 */
+  --color-overlay: rgba(20, 32, 38, 0.52);
+  --color-shadow: rgba(34, 51, 61, 0.12);
+
+  /* 布局：直角是这套设计的默认，圆角只留给真正的圆 */
+  --radius: 0px;
+  --radius-lg: 0px;
+  --content-width: 1180px;
+  --article-width: 68ch;
+  --header-height: 4.25rem;
 
   /* 字体 */
-  --font-sans: -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', 'Noto Sans SC', sans-serif;
-  --font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas,
-    'SF Mono', monospace;
+  --font-display: Georgia, 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'STSong',
+    'SimSun', serif;
+  --font-sans: 'Noto Sans SC', -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, 'SF Mono', monospace;
 }
 
 /* 跟随系统：暗色（用户未手动选择时生效） */
@@ -53,51 +79,89 @@
   :root:not([data-theme]) {
     color-scheme: dark;
 
-    --color-bg: #0b0e18;
-    --color-surface: #121728;
-    --color-subtle: #1a1f33;
+    --color-bg: #101b22;
+    --color-surface: #16242c;
+    --color-subtle: #1c2d36;
+    --color-code-bg: #1c2d36;
 
-    --color-text: #e9edf5;
-    --color-text-secondary: #a4adc2;
-    --color-text-muted: #79839b;
+    --color-text: #e8ede7;
+    --color-text-secondary: #b4c2bd;
+    --color-text-muted: #93a4a4;
+    --color-ink: #e8ede7;
 
-    --color-border: #242b45;
+    --color-border: #2b3d45;
+    --color-border-strong: #3b515a;
 
-    --color-accent: #5cbf92;
-    --color-accent-hover: #70d1a6;
-    --color-accent-soft: rgba(92, 191, 146, 0.14);
+    --color-accent: #9dc4d8;
+    --color-accent-hover: #beddea;
+    --color-accent-soft: rgba(157, 196, 216, 0.12);
 
-    --color-code-bg: #1a1f33;
+    --color-sky: #36505c;
+    --color-sky-soft: #1b2c35;
+    --color-cloud: #16242c;
+    --color-grass: #79906c;
+    --color-grass-soft: #22302a;
+    --color-sun: #d3ad6a;
+    --color-sun-soft: #2e2a20;
+    --color-violet: #a49dbb;
+    --color-violet-soft: #262634;
 
-    --color-learning: #e8a94e;
-    --color-organizing: #8db2ff;
-    --color-mastered: #5ccf97;
-    --color-archived: #96a1b6;
+    --color-learning: #dbac69;
+    --color-organizing: #9dc4d8;
+    --color-mastered: #9cc39f;
+    --color-archived: #93a4a4;
+
+    --color-graph-link-1: rgba(232, 237, 231, 0.16);
+    --color-graph-link-2: rgba(232, 237, 231, 0.3);
+    --color-graph-link-3: rgba(232, 237, 231, 0.48);
+    --color-graph-link-dim: rgba(232, 237, 231, 0.06);
+
+    --color-overlay: rgba(3, 8, 12, 0.64);
+    --color-shadow: rgba(0, 0, 0, 0.3);
   }
 }
 
 /* 用户手动选择：暗色（优先级高于系统偏好） */
 :root[data-theme='dark'] {
-    color-scheme: dark;
+  color-scheme: dark;
 
-    --color-bg: #0b0e18;
-    --color-surface: #121728;
-    --color-subtle: #1a1f33;
+  --color-bg: #101b22;
+  --color-surface: #16242c;
+  --color-subtle: #1c2d36;
+  --color-code-bg: #1c2d36;
 
-    --color-text: #e9edf5;
-    --color-text-secondary: #a4adc2;
-    --color-text-muted: #79839b;
+  --color-text: #e8ede7;
+  --color-text-secondary: #b4c2bd;
+  --color-text-muted: #93a4a4;
+  --color-ink: #e8ede7;
 
-    --color-border: #242b45;
+  --color-border: #2b3d45;
+  --color-border-strong: #3b515a;
 
-    --color-accent: #5cbf92;
-    --color-accent-hover: #70d1a6;
-    --color-accent-soft: rgba(92, 191, 146, 0.14);
+  --color-accent: #9dc4d8;
+  --color-accent-hover: #beddea;
+  --color-accent-soft: rgba(157, 196, 216, 0.12);
 
-    --color-code-bg: #1a1f33;
+  --color-sky: #36505c;
+  --color-sky-soft: #1b2c35;
+  --color-cloud: #16242c;
+  --color-grass: #79906c;
+  --color-grass-soft: #22302a;
+  --color-sun: #d3ad6a;
+  --color-sun-soft: #2e2a20;
+  --color-violet: #a49dbb;
+  --color-violet-soft: #262634;
 
-    --color-learning: #e8a94e;
-    --color-organizing: #8db2ff;
-    --color-mastered: #5ccf97;
-    --color-archived: #96a1b6;
+  --color-learning: #dbac69;
+  --color-organizing: #9dc4d8;
+  --color-mastered: #9cc39f;
+  --color-archived: #93a4a4;
+
+  --color-graph-link-1: rgba(232, 237, 231, 0.16);
+  --color-graph-link-2: rgba(232, 237, 231, 0.3);
+  --color-graph-link-3: rgba(232, 237, 231, 0.48);
+  --color-graph-link-dim: rgba(232, 237, 231, 0.06);
+
+  --color-overlay: rgba(3, 8, 12, 0.64);
+  --color-shadow: rgba(0, 0, 0, 0.3);
 }

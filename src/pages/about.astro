@@ -5,42 +5,191 @@ import { SITE_TITLE } from '../consts';
 
 <BaseLayout title="关于">
   <div class="container about-page">
-    <h1>关于本站</h1>
-    <p>{SITE_TITLE} 是一个用 Markdown 培育的个人知识库（数字花园）。</p>
+    <header class="about-head">
+      <p class="eyebrow">COLOPHON / 关于</p>
+      <h1>关于本站</h1>
+      <p class="lead">{SITE_TITLE} 是一个用 Markdown 培育的个人知识库（数字花园）。</p>
+    </header>
 
-    <h2>理念</h2>
-    <p>
-      笔记是活着的：它们会随理解加深不断更新、互相连接。每篇笔记都有学习状态，
-      从「学习中」到「已掌握」，像植物一样生长。详细理念见
-      <a href="/notes/digital-garden/">数字花园理念</a>。
-    </p>
+    <div class="about-grid">
+      <section>
+        <h2>理念</h2>
+        <p>
+          笔记是活着的：它们会随理解加深不断更新、互相连接。每篇笔记都有学习状态，
+          从「学习中」到「已掌握」，像植物一样生长。详细理念见
+          <a href="/notes/digital-garden/">数字花园理念</a>。
+        </p>
+      </section>
 
-    <h2>技术</h2>
-    <ul>
-      <li>
-        纯静态架构：<a href="/notes/astro-static-site/">Astro</a>
-        在构建时把 Markdown 变成静态页面，无后端、无数据库。
-      </li>
-      <li>
-        内容即文件：所有笔记都是 <code>src/content/notes/</code> 下的 Markdown
-        文件，由 Git 管理版本。
-      </li>
-      <li>
-        笔记之间用 <a href="/notes/wikilinks/">双链</a> 连接，形成可视化的知识网络。
-      </li>
-    </ul>
+      <section>
+        <h2>技术</h2>
+        <ul>
+          <li>
+            纯静态架构：<a href="/notes/astro-static-site/">Astro</a>
+            在构建时把 Markdown 变成静态页面，无后端、无数据库。
+          </li>
+          <li>
+            内容即文件：所有笔记都是 <code>src/content/notes/</code> 下的 Markdown
+            文件，由 Git 管理版本。
+          </li>
+          <li>
+            笔记之间用 <a href="/notes/wikilinks/">双链</a> 连接，形成可视化的知识网络。
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <footer class="about-colophon">
+      <div class="about-palette" aria-label="配色：天空、云、草坡、阳光、阴影">
+        <span class="s s-sky"></span>
+        <span class="s s-cloud"></span>
+        <span class="s s-grass"></span>
+        <span class="s s-sun"></span>
+        <span class="s s-violet"></span>
+      </div>
+      <p>
+        界面配色取自莫奈《撑阳伞的女人》（1875）：天空的灰蓝、云的白、草坡的青绿、阳光的麦金，
+        以及裙摆与草地里的紫灰阴影。除圆形本身外，版面不使用圆角矩形。
+      </p>
+    </footer>
   </div>
 </BaseLayout>
 
 <style>
   .about-page {
-    max-width: var(--article-width);
+    max-width: 900px;
     margin-inline: auto;
-    padding-top: 2.5rem;
-    padding-bottom: 3rem;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
   }
 
-  .about-page h2 {
-    margin-top: 2em;
+  .about-head {
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .about-head h1 {
+    margin: 0.6rem 0 0.8rem;
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+  }
+
+  .lead {
+    max-width: 55ch;
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 1.08rem;
+    line-height: 1.85;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: clamp(2rem, 5vw, 4rem);
+    margin-top: 2.6rem;
+  }
+
+  .about-grid h2 {
+    margin: 0 0 0.8rem;
+    font-size: 1.2rem;
+  }
+
+  .about-grid p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.95;
+    text-wrap: pretty;
+  }
+
+  .about-grid p a {
+    white-space: nowrap;
+  }
+
+  .about-grid ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .about-grid li {
+    padding: 0.75rem 0;
+    border-top: 1px dotted var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.8;
+  }
+
+  .about-grid li:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .about-colophon {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 3rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .about-palette {
+    display: flex;
+    gap: 0.28rem;
+    flex-shrink: 0;
+  }
+
+  .about-palette .s {
+    display: block;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
+  }
+
+  .s-sky {
+    background: var(--color-sky);
+  }
+
+  .s-cloud {
+    background: var(--color-cloud);
+  }
+
+  .s-grass {
+    background: var(--color-grass);
+  }
+
+  .s-sun {
+    background: var(--color-sun);
+  }
+
+  .s-violet {
+    background: var(--color-violet);
+  }
+
+  .about-colophon p {
+    max-width: 62ch;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    line-height: 1.8;
+    color: var(--color-text-muted);
+  }
+
+  @media (max-width: 760px) {
+    .about-page {
+      padding-top: 2.5rem;
+      padding-bottom: 3rem;
+    }
+
+    .about-grid {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .about-colophon {
+      flex-direction: column;
+      gap: 1rem;
+    }
   }
 </style>

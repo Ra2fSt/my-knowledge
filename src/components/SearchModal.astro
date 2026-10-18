@@ -13,8 +13,19 @@
   hidden
 >
   <div class="search-modal">
+    <div class="search-modal-head">
+      <span>SEARCH / 全文搜索</span>
+      <kbd>Esc</kbd>
+    </div>
     <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
         <circle cx="11" cy="11" r="7"></circle>
         <path d="m20 20-3.8-3.8"></path>
       </svg>
@@ -25,9 +36,8 @@
         autocomplete="off"
         spellcheck="false"
       />
-      <kbd>Esc</kbd>
     </div>
-    <div class="search-hint">Ctrl+K 打开 · 输入即搜 · 结果带关键词高亮</div>
+    <p class="search-hint">Ctrl+K 打开 · 输入即搜 · 结果带关键词高亮</p>
     <div class="search-status" id="search-status"></div>
     <ul class="search-results" id="search-results"></ul>
   </div>
@@ -114,7 +124,10 @@
   function escapeHtml(s: string): string {
     return String(s).replace(/[&<>"']/g, (ch) => {
       return (
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[ch]
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<
+          string,
+          string
+        >)[ch]
       );
     });
   }
@@ -145,7 +158,8 @@
     const search = await pagefind.search(query);
     const top = search.results.slice(0, 10);
     const items = await Promise.all(top.map((r: any) => r.data()));
-    statusEl.textContent = items.length > 0 ? `找到 ${search.results.length} 个结果` : '没有找到相关结果';
+    statusEl.textContent =
+      items.length > 0 ? `找到 ${search.results.length} 个结果` : '没有找到相关结果';
     resultsEl.innerHTML = items
       .map(
         (item: any) => `
@@ -168,9 +182,9 @@
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    padding: 15vh 1rem 2rem;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(3px);
+    padding: 12vh 1.25rem 2rem;
+    background: var(--color-overlay);
+    backdrop-filter: blur(6px) saturate(1.05);
   }
 
   .search-overlay[hidden] {
@@ -178,103 +192,156 @@
   }
 
   .search-modal {
-    width: min(640px, 100%);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    max-height: 65vh;
+    width: min(680px, 100%);
+    max-height: 72vh;
     overflow-y: auto;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    border-top: 3px solid var(--color-sun);
+    padding: 0 0 1rem;
+    box-shadow: 10px 10px 0 color-mix(in srgb, var(--color-ink) 10%, transparent);
+  }
+
+  .search-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    color: var(--color-text-muted);
+  }
+
+  kbd {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-strong);
+    padding: 0.15rem 0.4rem;
   }
 
   .search-box {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.6rem 0.9rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
+    gap: 0.7rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
     background: var(--color-bg);
   }
 
+  .search-box:focus-within {
+    box-shadow: inset 0 -2px 0 var(--color-accent);
+  }
+
   .search-box svg {
-    width: 1.1rem;
-    height: 1.1rem;
+    width: 1.15rem;
+    height: 1.15rem;
     flex-shrink: 0;
     color: var(--color-text-muted);
   }
 
   .search-box input {
     flex: 1;
+    min-width: 0;
     border: none;
     outline: none;
     background: transparent;
     color: var(--color-text);
-    font-size: 1rem;
+    font-family: var(--font-sans);
+    font-size: 1.02rem;
   }
 
-  .search-box kbd {
-    flex-shrink: 0;
-    font-size: 0.72rem;
+  .search-box input::placeholder {
     color: var(--color-text-muted);
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    padding: 0.1rem 0.4rem;
+    opacity: 0.8;
   }
 
   .search-hint {
-    font-size: 0.78rem;
+    margin: 0;
+    padding: 0.75rem 1.25rem 0;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
     color: var(--color-text-muted);
   }
 
   .search-status {
-    font-size: 0.82rem;
-    color: var(--color-text-muted);
     min-height: 1.2em;
+    padding: 0.5rem 1.25rem 0;
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
   }
 
   .search-results {
     list-style: none;
     margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
+    padding: 0.4rem 1.25rem 0;
+  }
+
+  .search-results :global(li) {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .search-results :global(li:first-child) {
+    border-top: 0;
   }
 
   .search-results :global(a) {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
-    padding: 0.6rem 0.8rem;
-    border-radius: var(--radius);
+    gap: 0.25rem;
+    padding: 0.8rem 0.6rem;
+    border-left: 2px solid transparent;
     color: var(--color-text);
-  }
-
-  .search-results :global(a:hover) {
-    background: var(--color-subtle);
     text-decoration: none;
   }
 
+  .search-results :global(a:hover) {
+    background: var(--color-sky-soft);
+    border-left-color: var(--color-sun);
+  }
+
   .search-results :global(.result-title) {
+    font-family: var(--font-display);
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.98rem;
+    line-height: 1.45;
   }
 
   .search-results :global(.result-excerpt) {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--color-text-secondary);
-    line-height: 1.55;
+    line-height: 1.6;
   }
 
   .search-results :global(mark) {
-    background: var(--color-accent-soft);
-    color: var(--color-accent);
-    border-radius: 2px;
+    background: var(--color-sun-soft);
+    color: var(--color-text);
     padding: 0 0.1em;
+  }
+
+  @media (max-width: 600px) {
+    .search-overlay {
+      padding-top: 8vh;
+    }
+
+    .search-modal {
+      max-height: 82vh;
+      box-shadow: 6px 6px 0 color-mix(in srgb, var(--color-ink) 10%, transparent);
+    }
+
+    .search-modal-head,
+    .search-box,
+    .search-hint,
+    .search-status,
+    .search-results {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
   }
 </style>

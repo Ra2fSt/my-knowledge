@@ -15,14 +15,17 @@ const pageTitle = page.currentPage === 1 ? '笔记' : `笔记 · 第 ${page.curr
 ---
 
 <BaseLayout title={pageTitle}>
-  <div class="container list-page">
-    <header class="list-header">
+  <div class="container page-shell">
+    <header class="page-head">
+      <p class="eyebrow">ARCHIVE / 笔记</p>
       <h1>全部笔记</h1>
       <p>共 {page.total} 篇，按最近更新排序</p>
     </header>
 
     <div class="note-list">
-      {page.data.map((note) => <NoteCard note={note} />)}
+      {page.data.map((note, index) => (
+        <NoteCard note={note} index={page.start + index + 1} />
+      ))}
     </div>
 
     <nav class="pagination" aria-label="分页">
@@ -46,29 +49,27 @@ const pageTitle = page.currentPage === 1 ? '笔记' : `笔记 · 第 ${page.curr
 </BaseLayout>
 
 <style>
-  .list-page {
-    max-width: var(--article-width);
-    margin-inline: auto;
-    padding-top: 2.5rem;
-    padding-bottom: 3rem;
-  }
-
-  .list-header h1 {
-    margin: 0 0 0.4rem;
-  }
-
-  .list-header p {
-    margin: 0 0 1.5rem;
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
-  }
-
   .pagination {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
     margin-top: 2rem;
-    font-size: 0.92rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+  }
+
+  .pagination a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+  }
+
+  .pagination a:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
   }
 
   .page-info {
@@ -77,5 +78,12 @@ const pageTitle = page.currentPage === 1 ? '笔记' : `笔记 · 第 ${page.curr
 
   .disabled {
     color: var(--color-text-muted);
+    opacity: 0.55;
+  }
+
+  @media (max-width: 520px) {
+    .pagination {
+      font-size: 0.66rem;
+    }
   }
 </style>

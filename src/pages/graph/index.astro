@@ -9,16 +9,19 @@ const graph = buildGlobalGraph(notes);
 
 <BaseLayout title="知识图谱" description="用学科颜色与关系线宽探索知识联系。">
   <div class="container graph-page">
-    <header>
-      <div><p>EXPLORE / 知识之间的联系</p><h1>一张会生长的地图</h1></div><a href="/learn/"
-        >返回学习地图 →</a>
+    <header class="graph-head">
+      <div>
+        <p class="eyebrow">EXPLORE / 知识之间的联系</p>
+        <h1>一张会生长的地图</h1>
+      </div>
+      <a class="text-link" href="/learn/">返回学习地图 →</a>
     </header>
     <p class="hint">
       颜色区分学科；细线是引用，较粗的线是支撑或核心联系。悬停连线可读说明，点击节点打开笔记。
     </p>
     {
       notes.length > graph.nodes.length && (
-        <p class="hint">
+        <p class="hint hint-muted">
           当前按连接度展示前 {graph.nodes.length} / {notes.length} 篇笔记。
         </p>
       )
@@ -26,42 +29,59 @@ const graph = buildGlobalGraph(notes);
     <KnowledgeGraph nodes={graph.nodes} links={graph.links} height={600} controls />
   </div>
 </BaseLayout>
+
 <style>
   .graph-page {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+    padding-top: 3rem;
+    padding-bottom: 2.5rem;
   }
-  header {
+
+  .graph-head {
     display: flex;
+    align-items: flex-end;
     justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
+    padding-bottom: 1.3rem;
+    border-bottom: 1px solid var(--color-border);
   }
-  header p {
-    font-size: 0.73rem;
-    letter-spacing: 0.12em;
-    color: var(--color-text-muted);
-    margin: 0;
+
+  .graph-head h1 {
+    margin: 0.45rem 0 0;
+    font-size: clamp(2.1rem, 4.5vw, 3.3rem);
   }
-  h1 {
-    font-size: clamp(1.5rem, 3vw, 2.2rem);
-    margin: 0.4rem 0;
-  }
-  header > a {
-    font-size: 0.85rem;
+
+  .graph-head > a {
+    padding-bottom: 0.3rem;
     white-space: nowrap;
   }
+
   .hint {
-    font-size: 0.85rem;
+    max-width: 56em;
+    margin: 1rem 0 1.4rem;
     color: var(--color-text-secondary);
-    margin: 0.7rem 0 1.3rem;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    text-wrap: pretty;
   }
-  @media (max-width: 600px) {
-    header {
-      align-items: start;
+
+  .hint-muted {
+    margin-top: -0.8rem;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+  }
+
+  @media (max-width: 700px) {
+    .graph-page {
+      padding-top: 2rem;
     }
-    header > a {
-      font-size: 0.75rem;
+
+    .graph-head {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .graph-head > a {
       white-space: normal;
     }
   }

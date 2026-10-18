@@ -15,33 +15,32 @@ const inCategory = notesByCategory(notes, category);
 ---
 
 <BaseLayout title={`分类：${category}`}>
-  <div class="container list-page">
-    <header class="list-header">
-      <h1>分类：{category}</h1>
-      <p>{inCategory.length} 篇笔记 · <a href="/categories/">← 全部分类</a></p>
+  <div class="container page-shell">
+    <header class="page-head">
+      <p class="eyebrow">
+        <a href="/categories/">分类</a>
+        <span aria-hidden="true">/</span>
+        <span>{category}</span>
+      </p>
+      <h1>{category}</h1>
+      <p>
+        {inCategory.length} 篇笔记 · <a href="/categories/">← 全部分类</a>
+      </p>
     </header>
 
     <div class="note-list">
-      {inCategory.map((note) => <NoteCard note={note} />)}
+      {inCategory.map((note, index) => <NoteCard note={note} index={index + 1} />)}
     </div>
   </div>
 </BaseLayout>
 
 <style>
-  .list-page {
-    max-width: var(--article-width);
-    margin-inline: auto;
-    padding-top: 2.5rem;
-    padding-bottom: 3rem;
+  .eyebrow a {
+    text-decoration: none;
   }
 
-  .list-header h1 {
-    margin: 0 0 0.4rem;
-  }
-
-  .list-header p {
-    margin: 0 0 1.5rem;
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
+  .eyebrow a:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
   }
 </style>

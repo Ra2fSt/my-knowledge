@@ -15,17 +15,19 @@ const { status } = Astro.props;
   .status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.35em;
-    font-size: 0.8rem;
-    font-weight: 500;
+    gap: 0.42em;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
     white-space: nowrap;
   }
 
+  /* 一小段颜色横线，像画布上的笔触，而不是胶囊 */
   .status-badge::before {
     content: '';
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    width: 13px;
+    height: 2px;
+    background: currentColor;
     flex-shrink: 0;
   }
 
@@ -33,31 +35,15 @@ const { status } = Astro.props;
     color: var(--color-learning);
   }
 
-  .status-badge[data-status='learning']::before {
-    background: var(--color-learning);
-  }
-
   .status-badge[data-status='organizing'] {
     color: var(--color-organizing);
-  }
-
-  .status-badge[data-status='organizing']::before {
-    background: var(--color-organizing);
   }
 
   .status-badge[data-status='mastered'] {
     color: var(--color-mastered);
   }
 
-  .status-badge[data-status='mastered']::before {
-    background: var(--color-mastered);
-  }
-
   .status-badge[data-status='archived'] {
     color: var(--color-archived);
-  }
-
-  .status-badge[data-status='archived']::before {
-    background: var(--color-archived);
   }
 </style>

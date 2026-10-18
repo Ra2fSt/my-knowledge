@@ -13,7 +13,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 {
   toc.length > 0 && (
     <nav class="toc" aria-label="目录">
-      <p class="toc-title">目录</p>
+      <p class="toc-title">目录 · ON THIS PAGE</p>
       <ul>
         {toc.map((h) => (
           <li class={`toc-depth-${h.depth}`}>
@@ -27,10 +27,13 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
 <style>
   .toc-title {
-    margin: 0 0 0.5rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-text-secondary);
+    margin: 0 0 0.65rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    line-height: 1.5;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--color-text-muted);
   }
 
   .toc ul {
@@ -42,26 +45,27 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
   .toc a {
     display: block;
-    padding: 0.25rem 0.75rem;
+    padding: 0.32rem 0.8rem;
     margin-left: -1px;
     border-left: 2px solid transparent;
-    font-size: 0.88rem;
+    font-size: 0.84rem;
+    line-height: 1.55;
     color: var(--color-text-secondary);
-    line-height: 1.5;
+    text-decoration: none;
   }
 
   .toc a:hover {
     color: var(--color-text);
-    text-decoration: none;
   }
 
   .toc a.active {
     color: var(--color-accent);
-    border-left-color: var(--color-accent);
+    border-left-color: var(--color-sun);
   }
 
   .toc-depth-3 a {
-    padding-left: 1.5rem;
+    padding-left: 1.55rem;
+    font-size: 0.79rem;
   }
 </style>
 

@@ -10,19 +10,25 @@ const suggested = notes.filter((n) => n.data.status !== 'archived').slice(0, 3);
 
 <BaseLayout title="页面未找到">
   <div class="container not-found">
-    <h1 class="code">404</h1>
-    <p class="message">这个页面不存在，可能已被移动或删除。</p>
-    <p class="links">
-      <a href="/">回到首页</a>
-      <span class="sep">·</span>
-      <a href="/notes/">浏览全部笔记</a>
-    </p>
+    <div class="not-found-head">
+      <p class="eyebrow not-found-kicker">404 / LOST IN THE GARDEN</p>
+      <h1 class="code">404</h1>
+      <p class="message">这个页面不存在，可能已被移动或删除。</p>
+      <div class="links">
+        <a class="btn btn-primary" href="/">回到首页</a>
+        <a class="btn btn-ghost" href="/notes/">浏览全部笔记</a>
+      </div>
+    </div>
 
     {
       suggested.length > 0 && (
         <section class="suggest">
           <h2>不妨看看这几篇</h2>
-          {suggested.map((note) => <NoteCard note={note} />)}
+          <div class="note-list">
+            {suggested.map((note, index) => (
+              <NoteCard note={note} index={index + 1} />
+            ))}
+          </div>
         </section>
       )
     }
@@ -31,45 +37,62 @@ const suggested = notes.filter((n) => n.data.status !== 'archived').slice(0, 3);
 
 <style>
   .not-found {
-    padding: 5rem 1.5rem;
+    max-width: 760px;
+    margin-inline: auto;
+    padding: 5.5rem 0 5rem;
+  }
+
+  .not-found-head {
     text-align: center;
   }
 
+  .not-found-kicker {
+    justify-content: center;
+  }
+
   .code {
-    margin: 0;
-    font-size: clamp(4rem, 12vw, 7rem);
-    line-height: 1;
+    margin: 0.8rem 0 0;
+    font-size: clamp(6rem, 18vw, 11rem);
+    line-height: 0.9;
+    letter-spacing: -0.06em;
     color: var(--color-accent);
   }
 
   .message {
-    margin: 1.5rem 0 0;
+    margin: 1.6rem 0 0;
     color: var(--color-text-secondary);
-    font-size: 1.1rem;
+    font-size: 1.02rem;
   }
 
   .links {
-    margin: 1rem 0 0;
-    font-size: 1rem;
-  }
-
-  .sep {
-    margin: 0 0.5rem;
-    color: var(--color-text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.9rem;
+    margin-top: 1.6rem;
   }
 
   .suggest {
-    margin: 4rem auto 0;
     max-width: 40rem;
+    margin: 4rem auto 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
     text-align: left;
-    padding: 1.5rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
   }
 
   .suggest h2 {
-    margin: 0 0 0.5rem;
-    font-size: 1.05rem;
+    margin: 0 0 0.6rem;
+    font-size: 1.1rem;
+  }
+
+  .suggest .note-list {
+    text-align: left;
+  }
+
+  @media (max-width: 560px) {
+    .not-found {
+      padding-top: 3.5rem;
+      padding-bottom: 3.5rem;
+    }
   }
 </style>

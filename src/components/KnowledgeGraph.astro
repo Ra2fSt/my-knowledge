@@ -164,6 +164,16 @@ const categories = [...new Set(nodes.map((n) => n.category))];
         getComputedStyle(document.documentElement).getPropertyValue(name).trim();
       let textColor = css('--color-text');
       let mutedColor = css('--color-text-muted');
+      let link1 = css('--color-graph-link-1');
+      let link2 = css('--color-graph-link-2');
+      let link3 = css('--color-graph-link-3');
+      let linkDim = css('--color-graph-link-dim');
+      const strengthColor = (strength: number) =>
+        strength >= 3 ? link3 : strength === 2 ? link2 : link1;
+      type LabelBox = { x1: number; y1: number; x2: number; y2: number };
+      let labelBoxes: LabelBox[] = [];
+      const compactLabelsWidth = 560;
+      let compactLabels = canvas.clientWidth < compactLabelsWidth;
       const draw = (n: RenderNode, ctx: CanvasRenderingContext2D, scale: number) => {
         const active = !hovered || neighbors.has(n.id);
         const radius = Math.max(4, Math.min(10, Math.sqrt(n.val) * 1.8));
@@ -182,27 +192,49 @@ const categories = [...new Set(nodes.map((n) => n.category))];
         }
         if (
           labels?.checked ||
-          visibleCount < 14 ||
-          n.kind === 'subject' ||
           n.kind === 'hub' ||
+          hovered === n.id ||
           (hovered && neighbors.has(n.id)) ||
-          scale > 1.8
+          (!compactLabels &&
+            (visibleCount < 12 ||
+              n.kind === 'subject' ||
+              n.val <= 2 ||
+              scale > 1.8))
         ) {
           const label =
             n.kind === 'hub'
               ? '计算机基础'
-              : n.kind === 'chapter'
-                ? n.name.split(' · ').pop()!
-                : n.name;
+              : n.kind === 'subject'
+                ? n.name.split(' · ')[0]
+                : n.kind === 'chapter'
+                  ? n.name.split(' · ').pop()!
+                  : n.name;
           const fontSize = 11 / scale;
+          const labelY = n.y + radius + 5 / scale;
           ctx.font = '500 ' + fontSize + 'px ' + getComputedStyle(document.body).fontFamily;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';
-          ctx.lineWidth = 3 / scale;
-          ctx.strokeStyle = css('--color-surface');
-          ctx.strokeText(label, n.x, n.y + radius + 5 / scale);
-          ctx.fillStyle = textColor;
-          ctx.fillText(label, n.x, n.y + radius + 5 / scale);
+          const width = ctx.measureText(label).width;
+          const pad = 2 / scale;
+          const box: LabelBox = {
+            x1: n.x - width / 2 - pad,
+            y1: labelY - pad,
+            x2: n.x + width / 2 + pad,
+            y2: labelY + fontSize + pad,
+          };
+          const collides =
+            hovered !== n.id &&
+            labelBoxes.some(
+              (b) => box.x1 < b.x2 && box.x2 > b.x1 && box.y1 < b.y2 && box.y2 > b.y1,
+            );
+          if (!collides) {
+            labelBoxes.push(box);
+            ctx.lineWidth = 3 / scale;
+            ctx.strokeStyle = css('--color-surface');
+            ctx.strokeText(label, n.x, labelY);
+            ctx.fillStyle = textColor;
+            ctx.fillText(label, n.x, labelY);
+          }
         }
         ctx.restore();
       };
@@ -216,11 +248,13 @@ const categories = [...new Set(nodes.map((n) => n.category))];
         .linkWidth((l: RenderLink) => [0, 0.7, 1.8, 3.2][l.strength])
         .linkLabel((l: RenderLink) => escape(l.strength + '/3 · ' + l.descriptions.join('；')))
         .linkColor((l: RenderLink) => {
-          if (hovered && id(l.source) !== hovered && id(l.target) !== hovered)
-            return 'rgba(120,130,145,.06)';
-          return hovered ? mutedColor : 'rgba(120,130,145,' + (0.12 + l.strength * 0.09) + ')';
+          if (hovered && id(l.source) !== hovered && id(l.target) !== hovered) return linkDim;
+          return hovered ? mutedColor : strengthColor(l.strength);
         })
         .nodeCanvasObject(draw)
+        .onRenderFramePre(() => {
+          labelBoxes = [];
+        })
         .onNodeClick((n) => {
           location.href = (n as GraphNode).url;
         })
@@ -246,11 +280,19 @@ const categories = [...new Set(nodes.map((n) => n.category))];
         .onEngineStop(() => {
           if (pendingFit) {
             pendingFit = false;
-            fg.zoomToFit(250, 50);
+            fg.zoomToFit(250, 60);
           }
         });
-      (fg.d3Force('charge') as { strength: (n: number) => void }).strength(-350);
+      const charge = fg.d3Force('charge') as {
+        strength: (n: number) => void;
+        distanceMax?: (n: number) => void;
+      };
+      charge.strength(-240);
+      // 限制斥力作用半径：否则互不相连的笔记会被推到画布之外，
+      // zoomToFit 为了容纳离群点会把主网络缩成一团。
+      charge.distanceMax?.(260);
       (fg.d3Force('link') as { distance: (n: number) => void }).distance(110);
+      fg.d3AlphaDecay(0.045);
       function render() {
         hovered = null;
         neighbors.clear();
@@ -307,12 +349,17 @@ const categories = [...new Set(nodes.map((n) => n.category))];
         render();
       });
       new ResizeObserver(() => {
+        compactLabels = canvas.clientWidth < compactLabelsWidth;
         fg.width(canvas.clientWidth).height(canvas.clientHeight);
-        fg.zoomToFit(0, 50);
+        fg.zoomToFit(0, 60);
       }).observe(canvas);
       const refresh = () => {
         textColor = css('--color-text');
         mutedColor = css('--color-text-muted');
+        link1 = css('--color-graph-link-1');
+        link2 = css('--color-graph-link-2');
+        link3 = css('--color-graph-link-3');
+        linkDim = css('--color-graph-link-dim');
         fg.nodeCanvasObject(draw);
         fg.linkColor(fg.linkColor());
       };
@@ -331,130 +378,181 @@ const categories = [...new Set(nodes.map((n) => n.category))];
 <style>
   .knowledge-graph {
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
     background: var(--color-surface);
     overflow: hidden;
     min-width: 0;
   }
+
   .graph-toolbar {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.8rem;
+    gap: 1rem;
     align-items: end;
-    padding: 1rem;
+    padding: 1rem 1.2rem;
     border-bottom: 1px solid var(--color-border);
-    background: var(--color-bg);
+    background: var(--color-sky-soft);
   }
+
   label {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    color: var(--color-text-secondary);
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
   }
+
   select,
   button {
-    font: inherit;
-    font-size: 0.82rem;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
     padding: 0.45rem 0.6rem;
     background: var(--color-surface);
     color: var(--color-text);
-    border: 1px solid var(--color-border);
-    border-radius: 5px;
+    border: 1px solid var(--color-border-strong);
   }
+
+  select:hover,
+  button:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
   button {
     cursor: pointer;
   }
+
   .check-label {
     flex-direction: row;
     align-items: center;
     align-self: center;
-    margin-top: 0.8rem;
+    gap: 0.4rem;
+    margin-top: 0.9rem;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    letter-spacing: 0;
+    color: var(--color-text-secondary);
   }
+
+  .check-label input {
+    accent-color: var(--color-accent);
+  }
+
   .graph-canvas {
     width: 100%;
     max-height: 66vh;
     min-height: 280px;
-    background-image: radial-gradient(var(--color-border) 0.8px, transparent 0.8px);
-    background-size: 20px 20px;
+    background-color: var(--color-surface);
+    background-image: radial-gradient(
+      ellipse 60% 55% at 50% 22%,
+      var(--color-sky-soft) 0%,
+      transparent 72%
+    );
   }
+
   .graph-info {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
     gap: 0.8rem;
-    padding: 0.8rem 1rem;
+    padding: 0.75rem 1.2rem;
     border-top: 1px solid var(--color-border);
-    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.03em;
     color: var(--color-text-secondary);
   }
+
   .line-legend,
   .category-legend {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem 1rem;
   }
+
   .line-legend span,
   .category-legend span {
     display: flex;
     align-items: center;
     gap: 0.35rem;
   }
+
   .line-legend i {
     width: 22px;
     border-top-style: solid;
     border-color: var(--color-text-muted);
   }
+
   .category-legend {
-    padding: 0 1rem 0.8rem;
-    font-size: 0.73rem;
+    padding: 0 1.2rem 0.85rem;
+    font-size: 0.67rem;
     color: var(--color-text-secondary);
   }
+
   .category-legend [hidden] {
     display: none;
   }
+
   .category-legend i {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    width: 7px;
+    height: 7px;
+    background: currentColor;
   }
+
   .graph-status {
     margin: 0;
-    padding: 0 1rem;
-    font-size: 0.8rem;
+    padding: 0 1.2rem 0.6rem;
+    font-size: 0.76rem;
+    color: var(--color-text-secondary);
   }
+
   .graph-status:empty {
     display: none;
   }
+
   .graph-text {
-    padding: 0.8rem 1rem;
+    padding: 0.85rem 1.2rem;
     border-top: 1px solid var(--color-border);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--color-text-secondary);
   }
+
   summary {
     cursor: pointer;
+    color: var(--color-text-secondary);
   }
+
+  summary:hover {
+    color: var(--color-accent);
+  }
+
   .graph-text ul {
     max-height: 260px;
     overflow: auto;
     overflow-wrap: anywhere;
-    padding-left: 1.3rem;
+    padding-left: 1.2rem;
   }
+
   .graph-text li {
     margin: 0.5rem 0;
   }
+
   @media (max-width: 500px) {
     .graph-toolbar {
-      gap: 0.5rem;
-      padding: 0.7rem;
+      gap: 0.6rem;
+      padding: 0.8rem;
     }
+
     select {
       max-width: 150px;
     }
+
     .line-legend {
       gap: 0.4rem 0.8rem;
     }
+
     .graph-canvas {
       max-height: 55vh;
     }

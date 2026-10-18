@@ -147,3 +147,11 @@ const data = JSON.stringify({ nodes, links }).replace(/</g, '\\u003c');
 - 新笔记正文用 [[id|中文显示名]]，避免可读页面出现英文文件名；双链插件仍只扫描 notes 顶层，层级使用 parent 而非迁移物理目录。
 
 - GFM 表格会先把未转义的别名分隔符 `|` 拆列。新表格统一使用 `[[完整中文标题]]`，正文段落保留别名；验证构建后的 note-content 不残留双中括号，防止构建成功但表格链接失效。
+
+## 14. 2026-10-18：视觉重构中踩到的排版与图谱坑
+
+- **中文不要用 `ch` 当行宽**：`ch` 是数字 `0` 的宽度，中文字符实际约 1em，`68ch` 的容器会把中文行压到一半宽，出现「整 / 理」「一张 / 网」这类孤字换行。正文可用 `em` 或直接限宽；需要可控断行时在模板里显式拆句。`text-wrap: pretty/balance` 可缓解但不能替代合理宽度。
+- **圆角不是靠一个变量就能全清**：`--radius: 0` 只影响显式引用它的地方；还要清理 999px 胶囊、`4px/5px/6px` 小圆角和第三方组件。force-graph 的 `.float-tooltip-kap` 默认为 3px 圆角，必须在全局样式里覆盖；可用无头 Chrome 遍历 `getComputedStyle(el).borderRadius` 做回归检查，只允许 `0px` 和真正的 `50%`。
+- **force-graph 的离群点会毁掉 `zoomToFit`**：默认 many-body 斥力会把没有连线的笔记推到 ±1000 坐标，`zoomToFit` 为容纳离群点把主网络缩到很小。给 charge 设置 `distanceMax`（本项目 260）并降低强度，同时用 `d3AlphaDecay` 加速收敛；离线节点仍会形成小岛，但主图比例正常。
+- **标签会互相压字**：在 `nodeCanvasObject` 里绘制文字前，用 `measureText` 建矩形做碰撞检测，并通过 `onRenderFramePre` 每帧清空已占区域；`nodeLabel` 只负责原生悬浮提示，不参与画布绘制。窄屏（<560px）只保留 hub 标签和悬停标签，否则 390px 下图谱会变成一团字。
+- **主题切换时画布颜色要重读 CSS 变量**：连线颜色不能写死 `rgba(120,130,145)`，否则暗色主题下会消失；改为从 `--color-graph-link-*` 读取，并在 `MutationObserver` 监听 `data-theme` 时更新。

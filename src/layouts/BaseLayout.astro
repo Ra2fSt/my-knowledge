@@ -24,6 +24,7 @@ const pageTitle = title ? `${title} · ${SITE_TITLE}` : SITE_TITLE;
     <meta name="generator" content={Astro.generator} />
     <title>{pageTitle}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#f3efe2" />
     <script is:inline>
       // 在页面绘制前应用用户保存过的主题，避免明暗闪烁
       (function () {
@@ -35,8 +36,9 @@ const pageTitle = title ? `${title} · ${SITE_TITLE}` : SITE_TITLE;
     </script>
   </head>
   <body>
+    <a class="skip-link" href="#main">跳到正文</a>
     <Header />
-    <main>
+    <main id="main">
       <slot />
     </main>
     <Footer />

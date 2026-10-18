@@ -15,33 +15,32 @@ const withTag = notesByTag(notes, tag);
 ---
 
 <BaseLayout title={`标签：${tag}`}>
-  <div class="container list-page">
-    <header class="list-header">
-      <h1>标签：#{tag}</h1>
-      <p>{withTag.length} 篇笔记 · <a href="/tags/">← 全部标签</a></p>
+  <div class="container page-shell">
+    <header class="page-head">
+      <p class="eyebrow">
+        <a href="/tags/">标签</a>
+        <span aria-hidden="true">/</span>
+        <span>#{tag}</span>
+      </p>
+      <h1>#{tag}</h1>
+      <p>
+        {withTag.length} 篇笔记 · <a href="/tags/">← 全部标签</a>
+      </p>
     </header>
 
     <div class="note-list">
-      {withTag.map((note) => <NoteCard note={note} />)}
+      {withTag.map((note, index) => <NoteCard note={note} index={index + 1} />)}
     </div>
   </div>
 </BaseLayout>
 
 <style>
-  .list-page {
-    max-width: var(--article-width);
-    margin-inline: auto;
-    padding-top: 2.5rem;
-    padding-bottom: 3rem;
+  .eyebrow a {
+    text-decoration: none;
   }
 
-  .list-header h1 {
-    margin: 0 0 0.4rem;
-  }
-
-  .list-header p {
-    margin: 0 0 1.5rem;
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
+  .eyebrow a:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
   }
 </style>

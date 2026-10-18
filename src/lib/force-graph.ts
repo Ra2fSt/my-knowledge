@@ -17,12 +17,15 @@ export interface ForceGraphInstance {
   linkLabel(a?: unknown): ForceGraphInstance;
   zoomToFit(duration?: number, padding?: number): ForceGraphInstance;
   onEngineStop(cb: () => void): ForceGraphInstance;
+  onRenderFramePre(cb: () => void): ForceGraphInstance;
   cooldownTicks(n: number): ForceGraphInstance;
   nodeCanvasObject(a?: unknown): ForceGraphInstance;
   onNodeClick(cb?: (node: unknown, event?: unknown) => void): ForceGraphInstance;
   onNodeHover(cb?: (node: unknown, prev?: unknown) => void): ForceGraphInstance;
   onNodeDragEnd(cb?: (node: unknown) => void): ForceGraphInstance;
   d3Force(name: string): unknown;
+  d3AlphaDecay(n?: number): ForceGraphInstance;
+  d3ReheatSimulation(): ForceGraphInstance;
   warmupTicks(n: number): ForceGraphInstance;
 }
 
